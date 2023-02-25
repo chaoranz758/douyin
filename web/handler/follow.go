@@ -2,8 +2,8 @@ package handler
 
 import (
 	"douyin/web/model/request"
-	"douyin/web/pkg/jwt"
 	"douyin/web/service"
+	"douyin/web/util"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 	"net/http"
@@ -30,7 +30,7 @@ func FollowUserHandle(c *gin.Context) {
 		return
 	}
 	//token校验
-	mc, err := jwt.ParseToken(followUserRequest.Token)
+	mc, err := util.ParseToken(followUserRequest.Token)
 	if err != nil {
 		zap.L().Error(getMsg(CodeInvalidToken), zap.Error(err))
 		c.JSON(http.StatusOK, gin.H{
@@ -88,7 +88,7 @@ func GetFollowListHandle(c *gin.Context) {
 		return
 	}
 	//token校验
-	mc, err := jwt.ParseToken(getFollowListRequest.Token)
+	mc, err := util.ParseToken(getFollowListRequest.Token)
 	if err != nil {
 		zap.L().Error(getMsg(CodeInvalidToken), zap.Error(err))
 		responseError(c, CodeInvalidToken, "user_list")
@@ -118,7 +118,7 @@ func GetFollowerListHandle(c *gin.Context) {
 		return
 	}
 	//token校验
-	mc, err := jwt.ParseToken(getFollowerListRequest.Token)
+	mc, err := util.ParseToken(getFollowerListRequest.Token)
 	if err != nil {
 		zap.L().Error(getMsg(CodeInvalidToken), zap.Error(err))
 		responseError(c, CodeInvalidToken, "user_list")
@@ -149,7 +149,7 @@ func GetFriendListHandle(c *gin.Context) {
 		return
 	}
 	//token校验
-	mc, err := jwt.ParseToken(getFriendListRequest.Token)
+	mc, err := util.ParseToken(getFriendListRequest.Token)
 	if err != nil {
 		zap.L().Error(getMsg(CodeInvalidToken), zap.Error(err))
 		responseError(c, CodeInvalidToken, "user_list")

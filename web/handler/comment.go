@@ -2,8 +2,8 @@ package handler
 
 import (
 	"douyin/web/model/request"
-	"douyin/web/pkg/jwt"
 	"douyin/web/service"
+	"douyin/web/util"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
@@ -25,7 +25,7 @@ func CommentVideoHandle(c *gin.Context) {
 	}
 	fmt.Printf("%v\n", commentVideoRequest)
 	//token校验
-	mc, err := jwt.ParseToken(commentVideoRequest.Token)
+	mc, err := util.ParseToken(commentVideoRequest.Token)
 	if err != nil {
 		zap.L().Error(getMsg(CodeInvalidToken), zap.Error(err))
 		responseError(c, CodeInvalidToken, "comment")
@@ -55,7 +55,7 @@ func GetCommentVideoListHandle(c *gin.Context) {
 		return
 	}
 	//token校验
-	mc, err := jwt.ParseToken(getCommentVideoListRequest.Token)
+	mc, err := util.ParseToken(getCommentVideoListRequest.Token)
 	if err != nil {
 		zap.L().Error(getMsg(CodeInvalidToken), zap.Error(err))
 		responseError(c, CodeInvalidToken, "comment_list")

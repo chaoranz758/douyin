@@ -1,4 +1,4 @@
-package middleware
+package gin_middleware
 
 //func Ja3() gin.HandlerFunc {
 //	return func(context *gin.Context) {
@@ -7,7 +7,7 @@ package middleware
 //		_, ja3OK := ja3ContextData.Verify()
 //		if !ja3OK {
 //			context.JSON(http.StatusOK, gin.H{
-//				"status_code": api.CodeCrawlerRequest,
+//				"status_code": handler.CodeCrawlerRequest,
 //				"msg":         "不安全的访问,请使用浏览器访问,这次请求将被拦截",
 //			})
 //			context.Abort()

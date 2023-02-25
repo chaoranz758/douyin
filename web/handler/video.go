@@ -2,10 +2,10 @@ package handler
 
 import (
 	"context"
+	"douyin/web/initialize/rocketmq"
 	"douyin/web/model/request"
-	"douyin/web/pkg/jwt"
-	"douyin/web/rocketMQ"
 	"douyin/web/service"
+	"douyin/web/util"
 	"encoding/json"
 	"fmt"
 	"github.com/apache/rocketmq-client-go/v2/primitive"
@@ -39,7 +39,7 @@ func PublishVideoHandle(c *gin.Context) {
 		return
 	}
 	//token校验
-	mc, err := jwt.ParseToken(publishVideoRequest.Token)
+	mc, err := util.ParseToken(publishVideoRequest.Token)
 	if err != nil {
 		zap.L().Error(getMsg(CodeInvalidToken), zap.Error(err))
 		c.JSON(http.StatusOK, gin.H{
@@ -71,7 +71,7 @@ func PublishVideoHandle(c *gin.Context) {
 		Topic: "uploadVideoTopic2",
 		Body:  data,
 	}
-	sync, err := rocketMQ.Producer1.SendSync(context.Background(), msg)
+	sync, err := rocketmq.Producer1.SendSync(context.Background(), msg)
 	if err != nil {
 		zap.L().Error("生产者消息发送失败", zap.Error(err))
 		zap.L().Error(getMsg(CodeProducerSendMessageFailed), zap.Error(err))
@@ -121,7 +121,7 @@ func GetPublishVideoHandle(c *gin.Context) {
 		return
 	}
 	//token校验
-	mc, err := jwt.ParseToken(getPublishVideoRequest.Token)
+	mc, err := util.ParseToken(getPublishVideoRequest.Token)
 	if err != nil {
 		zap.L().Error(getMsg(CodeInvalidToken), zap.Error(err))
 		responseError(c, CodeInvalidToken, "video_list")
@@ -158,7 +158,7 @@ func GetVideoListHandle(c *gin.Context) {
 	var userId int64 = 0
 	if getVideoListRequest.Token != "" {
 		//token校验
-		mc, err := jwt.ParseToken(getVideoListRequest.Token)
+		mc, err := util.ParseToken(getVideoListRequest.Token)
 		if err != nil {
 			zap.L().Error(getMsg(CodeInvalidToken), zap.Error(err))
 			c.JSON(http.StatusOK, gin.H{

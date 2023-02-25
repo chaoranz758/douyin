@@ -2,8 +2,8 @@ package handler
 
 import (
 	"douyin/web/model/request"
-	"douyin/web/pkg/jwt"
 	"douyin/web/service"
+	"douyin/web/util"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 	"net/http"
@@ -27,7 +27,7 @@ func FavoriteVideoHandle(c *gin.Context) {
 		return
 	}
 	//token校验
-	mc, err := jwt.ParseToken(favoriteVideoRequest.Token)
+	mc, err := util.ParseToken(favoriteVideoRequest.Token)
 	if err != nil {
 		zap.L().Error(getMsg(CodeInvalidToken), zap.Error(err))
 		c.JSON(http.StatusOK, gin.H{
@@ -79,7 +79,7 @@ func GetFavoriteVideoListHandle(c *gin.Context) {
 		return
 	}
 	//token校验
-	mc, err := jwt.ParseToken(getFavoriteVideoListRequest.Token)
+	mc, err := util.ParseToken(getFavoriteVideoListRequest.Token)
 	if err != nil {
 		zap.L().Error(getMsg(CodeInvalidToken), zap.Error(err))
 		responseError(c, CodeInvalidToken, "video_list")

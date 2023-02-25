@@ -2,8 +2,8 @@ package handler
 
 import (
 	"douyin/web/model/request"
-	"douyin/web/pkg/jwt"
 	"douyin/web/service"
+	"douyin/web/util"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 	"net/http"
@@ -99,7 +99,7 @@ func GetUserInfoHandle(c *gin.Context) {
 		return
 	}
 	//token校验
-	mc, err := jwt.ParseToken(getUserInfoRequest.Token)
+	mc, err := util.ParseToken(getUserInfoRequest.Token)
 	if err != nil {
 		zap.L().Error(getMsg(CodeInvalidToken), zap.Error(err))
 		responseError(c, CodeInvalidToken, "user")

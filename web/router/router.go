@@ -1,16 +1,16 @@
 package router
 
 import (
+	"douyin/web/gin_middleware"
 	"douyin/web/handler"
-	"douyin/web/middleware"
 	"github.com/gin-gonic/gin"
 	"net/http"
 )
 
 func Init() *gin.Engine {
 	r := gin.New()
-	r.Use(middleware.GinLogger(), middleware.GinRecovery(true))
-	r.Use(middleware.Cors())
+	r.Use(gin_middleware.GinLogger(), gin_middleware.GinRecovery(true))
+	r.Use(gin_middleware.Cors())
 	//r.Use(middleware.CSRFMiddle())
 	//r.Use(middleware.Ja3())
 	//健康检查接口

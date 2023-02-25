@@ -5,7 +5,7 @@ import (
 	request1 "douyin/proto/follow/request"
 	response1 "douyin/proto/follow/response"
 	"douyin/proto/user/response"
-	"douyin/web/client/grpc"
+	"douyin/web/initialize/grpc_client"
 	"douyin/web/model/request"
 	"go.uber.org/zap"
 	"strconv"

@@ -2,7 +2,7 @@ package util
 
 import (
 	"context"
-	"douyin/web/config"
+	"douyin/web/initialize/config"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"

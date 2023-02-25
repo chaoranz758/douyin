@@ -2,7 +2,7 @@ package grpc
 
 import (
 	"douyin/proto/comment/api"
-	"douyin/web/config"
+	"douyin/web/initialize/config"
 	"fmt"
 	_ "github.com/mbobakov/grpc-consul-resolver"
 	"google.golang.org/grpc"

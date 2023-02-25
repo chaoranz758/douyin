@@ -55,8 +55,8 @@
     "namespace": "douyin_web",
     "timeoutMs": 5000,
     "notLoadCacheAtStart": false,
-    "logDir": "tmp/nacos/log",
-    "cacheDir": "tmp/nacos/cache",
+    "logDir": "log/nacos/log",
+    "cacheDir": "config/nacos/cache",
     "logLevel": "debug",
     "dataID": "douyin_web.json",
     "group": "dev"

@@ -1,7 +1,7 @@
 package consul
 
 import (
-	"douyin/web/config"
+	"douyin/web/initialize/config"
 	"fmt"
 	"github.com/hashicorp/consul/api"
 )

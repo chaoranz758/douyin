@@ -2,8 +2,8 @@ package handler
 
 import (
 	"douyin/web/model/request"
-	"douyin/web/pkg/jwt"
 	"douyin/web/service"
+	"douyin/web/util"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 	"net/http"
@@ -27,7 +27,7 @@ func SendMessageHandle(c *gin.Context) {
 		return
 	}
 	//token校验
-	mc, err := jwt.ParseToken(sendMessageRequest.Token)
+	mc, err := util.ParseToken(sendMessageRequest.Token)
 	if err != nil {
 		zap.L().Error(getMsg(CodeInvalidToken), zap.Error(err))
 		c.JSON(http.StatusOK, gin.H{
@@ -71,7 +71,7 @@ func GetMessageHandle(c *gin.Context) {
 	//fmt.Println(time.Now().UnixMilli())
 	//println(time.Now().UnixMilli() - getMessageRequest.PreMsgTime)
 	//token校验
-	mc, err := jwt.ParseToken(getMessageRequest.Token)
+	mc, err := util.ParseToken(getMessageRequest.Token)
 	if err != nil {
 		zap.L().Error(getMsg(CodeInvalidToken), zap.Error(err))
 		c.JSON(http.StatusOK, gin.H{

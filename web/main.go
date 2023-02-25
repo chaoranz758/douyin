@@ -1,11 +1,12 @@
 package main
 
 import (
-	"douyin/web/config"
+	"douyin/web/initialize/config"
+	consul2 "douyin/web/initialize/consul"
 	"douyin/web/initialize/grpc_client"
-	"douyin/web/middleware"
-	"douyin/web/pkg/consul"
-	"douyin/web/rocketMQ"
+	log1 "douyin/web/initialize/log"
+	"douyin/web/initialize/oss"
+	"douyin/web/initialize/rocketmq"
 	"douyin/web/router"
 	"douyin/web/util"
 	"fmt"
@@ -24,13 +25,13 @@ func main() {
 		log.Fatal("init settings failed, err:", err)
 	}
 	//2.初始化日志
-	if err := middleware.Init(config.Config.DouYinWeb.Mode); err != nil {
+	if err := log1.Init(config.Config.DouYinWeb.Mode); err != nil {
 		log.Fatal("init logger failed, err:", err)
 	}
 	defer zap.L().Sync()
 	zap.L().Debug("logger init success...")
 	//3.初始化consul连接
-	if err := consul.Init(fmt.Sprintf("%s:%d", config.Config.ConsulServer.Ip, config.Config.ConsulServer.Port)); err != nil {
+	if err := consul2.Init(fmt.Sprintf("%s:%d", config.Config.ConsulServer.Ip, config.Config.ConsulServer.Port)); err != nil {
 		zap.L().Error("init consul connection failed...", zap.Error(err))
 		log.Fatal("init consul connection failed...")
 	}
@@ -67,24 +68,24 @@ func main() {
 	}
 	zap.L().Debug("init message rpc client success...")
 	//5.向Consul注册服务
-	if err := consul.RegisterService(); err != nil {
+	if err := consul2.RegisterService(); err != nil {
 		zap.L().Error("register service to consul failed...", zap.Error(err))
 		log.Fatal("register service to consul failed...")
 	}
 	zap.L().Debug("register service to consul success...")
 	//6.启动阿里云oss上传客户端
-	if err := util.InitOSS(); err != nil {
+	if err := oss.InitOSS(); err != nil {
 		zap.L().Error("init oss failed", zap.Error(err))
 		log.Fatal("init oss failed")
 	}
 	zap.L().Debug("init oss success")
 	//7.开启消息队列生产者、消费者
-	if err := rocketMQ.InitProducer1(); err != nil {
+	if err := rocketmq.InitProducer1(); err != nil {
 		zap.L().Error("init producer1 failed...", zap.Error(err))
 		log.Fatal("init producer1 failed, err:", err)
 	}
 	zap.L().Debug("init producer1 success...")
-	if err := rocketMQ.InitCustomer1(); err != nil {
+	if err := rocketmq.InitCustomer1(); err != nil {
 		zap.L().Error("init customer1 failed...", zap.Error(err))
 		log.Fatal("init customer1 failed, err:", err)
 	}

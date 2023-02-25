@@ -4,7 +4,7 @@ import (
 	"context"
 	request1 "douyin/proto/comment/request"
 	"douyin/proto/comment/response"
-	"douyin/web/client/grpc"
+	"douyin/web/initialize/grpc_client"
 	"douyin/web/model/request"
 	"go.uber.org/zap"
 	"strconv"
