@@ -1,0 +1,32 @@
+syntax = "proto3";
+package api;
+option go_package = "douyin/proto/user/api";
+import "user/request/request.proto";
+import "user/response/response.proto";
+
+service User {
+  rpc UserRegister(request.douyin_user_register_request) returns (response.douyin_user_register_response);//用户注册
+  rpc UserLogin(request.douyin_user_login_request) returns (response.douyin_user_login_response);//用户登录
+  rpc GetUserInfo(request.douyin_user_request) returns (response.douyin_user_response);//获取用户信息
+
+  rpc GetUserInfoList(request.douyin_user_list_request) returns (response.douyin_user_list_response);//批量获取用户信息
+  rpc PushVUserRelativeInfoInit(request.douyin_push_v_set_request) returns (response.douyin_push_v_set_response);//将用户加入大V用户列表并将基本信息存入各种redis
+
+
+
+  rpc UserIsInfluencerActiver(request.douyin_user_is_influencer_activer_request) returns (response.douyin_user_is_influencer_activer_response);//判断用户是否为大V或活跃用户
+  rpc AddUserVideoCountSet(request.douyin_user_video_count_set_request) returns (response.douyin_user_video_count_set_response);//将发布视频数大于一定值的用户添加到set中
+  rpc AddUserVideoCountSetRevert(request.douyin_user_video_count_set_request) returns (response.douyin_user_video_count_set_response);//回滚-将发布视频数大于一定值的用户添加到set中
+  rpc AddUserFavoriteVideoCountSet(request.douyin_user_video_count_set_request) returns (response.douyin_user_video_count_set_response);//将点赞视频数大于一定值的用户添加到set中
+  rpc AddUserFavoriteVideoCountSetRevert(request.douyin_user_video_count_set_request) returns (response.douyin_user_video_count_set_response);//回滚-将点赞视频数大于一定值的用户添加到set中
+  rpc AddUserFollowUserCountSet(request.douyin_user_follow_count_set_request) returns (response.douyin_user_follow_count_set_response);//将点赞视频数大于一定值的用户添加到set中
+  rpc AddUserFollowerUserCountSet(request.douyin_user_follower_count_set_request) returns (response.douyin_user_follower_count_set_response);//将点赞视频数大于一定值的用户添加到set中
+  rpc AddUserFollowUserCountSetRevert(request.douyin_user_follow_count_set_request) returns (response.douyin_user_follow_count_set_response);//回滚-将点赞视频数大于一定值的用户添加到set中
+  rpc AddUserFollowerUserCountSetRevert(request.douyin_user_follower_count_set_request) returns (response.douyin_user_follower_count_set_response);//回滚-将点赞视频数大于一定值的用户添加到set中
+
+
+  rpc PushVActiveFollowerUserinfo(request.douyin_v_active_follow_follower_userinfo_request) returns (response.douyin_v_active_follow_follower_userinfo_response);//获取被关注者或关注者的用户信息并将其存入大V或活跃者的关注者、粉丝信息redis
+  rpc PushVActiveFollowerUserinfoRevert(request.douyin_v_active_follow_follower_userinfo_request) returns (response.douyin_v_active_follow_follower_userinfo_response);//回滚-获取被关注者或关注者的用户信息并将其存入大V或活跃者的关注者、粉丝信息redis
+  rpc DeleteVActiveFollowerUserinfo(request.douyin_delete_v_active_follow_follower_userinfo_request) returns (response.douyin_delete_v_active_follow_follower_userinfo_response);//删除大V或活跃者的关注者、粉丝信息redis
+  rpc GetVActiveFollowerUserinfo(request.douyin_get_v_active_follow_follower_userinfo_request) returns (response.douyin_get_v_active_follow_follower_userinfo_response);//获取大V或活跃者的关注者、粉丝信息redis或者从mysql读
+}

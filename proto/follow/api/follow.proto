@@ -1,0 +1,19 @@
+syntax = "proto3";
+package api;
+option go_package = "douyin/proto/follow/api";
+import "follow/request/request.proto";
+import "follow/response/response.proto";
+
+service Follow {
+  rpc FollowUser(request.douyin_relation_action_request) returns (response.douyin_relation_action_response);//关系操作
+  rpc GetFollowList(request.douyin_relation_follow_list_request) returns (response.douyin_relation_follow_list_response);//用户关注列表
+  rpc GetFollowerList(request.douyin_relation_follower_list_request) returns (response.douyin_relation_follower_list_response);//用户粉丝列表
+  rpc GetFriendList(request.douyin_relation_friend_list_request) returns (response.douyin_relation_friend_list_response);//用户好友列表
+
+  rpc GetFollowFollowerIdList(request.douyin_get_follow_follower_id_list_request) returns (response.douyin_get_follow_follower_id_list_response);
+
+  rpc GetFollowFollower(request.douyin_follow_follower_count_request) returns (response.douyin_follow_follower_count_response);//获取单个用户的好友数和粉丝数
+  rpc GetFollowFollowerList(request.douyin_follow_follower_list_count_request) returns (response.douyin_follow_follower_list_count_response);//获取多个用户的好友数和粉丝数
+  rpc GetFollowInfo(request.douyin_get_follow_request) returns (response.douyin_get_follow_response); //查询某个用户是否关注了其他用户
+  rpc GetFollowInfoList(request.douyin_get_follow_list_request) returns (response.douyin_get_follow_list_response); //批量查询某个用户是否关注了其他用户
+}

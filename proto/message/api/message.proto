@@ -1,0 +1,12 @@
+syntax = "proto3";
+package api;
+option go_package = "douyin/proto/message/api";
+import "message/request/request.proto";
+import "message/response/response.proto";
+
+service Message{
+  rpc SendMessage(request.douyin_message_action_request) returns (response.douyin_message_action_response);//消息操作
+  rpc GetMessage(request.douyin_message_chat_request) returns (response.douyin_message_chat_response);//聊天记录
+  rpc GetUserFriendMessage(request.douyin_get_user_friend_message_request) returns (response.douyin_get_user_friend_message_response);//获取最新聊天记录
+}
+

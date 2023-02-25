@@ -1,0 +1,83 @@
+syntax = "proto3";
+package request;
+option go_package = "douyin/proto/user/request";
+
+message douyin_user_register_request {
+  string username = 1;
+  string password = 2;
+}
+
+message douyin_user_login_request {
+  string username = 1;
+  string password = 2;
+}
+
+message douyin_user_request {
+  int64 user_id = 1;
+  int64 login_user_id = 2;
+}
+
+message douyin_user_list_request {
+  repeated int64 user_id = 1;
+  int64 login_user_id = 2;
+}
+
+message douyin_user_is_influencer_activer_request {
+  int64 user_id = 1;
+}
+
+message douyin_user_video_count_set_request {
+  int64 user_id = 1;
+}
+
+message douyin_user_favorite_video_count_set_request {
+  int64 user_id = 1;
+}
+
+message douyin_push_v_set_request {
+  int64 user_id = 1;
+  repeated int64 follow_id_list = 2;
+  repeated int64 follower_id_list = 3;
+}
+
+message douyin_user_follow_count_set_request {
+  int64 user_id = 1;
+}
+
+message douyin_user_follower_count_set_request {
+  int64 user_id = 1;
+}
+
+message douyin_v_active_follow_follower_userinfo_request {
+  int64 login_user_id = 1;
+  bool login_is_v = 2;
+  bool login_is_active = 3;
+  int64 user_id = 4;
+  int32 is_follow_follower = 5; //1表示大V或活跃用户关注的用户信息 2表示大V或活跃用户的粉丝信息
+  bool is_v = 6;
+  bool is_active = 7;
+}
+
+message douyin_delete_v_active_follow_follower_userinfo_request {
+  int64 login_user_id = 1;
+  bool login_is_v = 2;
+  bool login_is_active = 3;
+  int64 user_id = 4;
+  int32 is_follow_follower = 5; //1表示大V或活跃用户关注的用户信息 2表示大V或活跃用户的粉丝信息
+  bool is_v = 6;
+  bool is_active = 7;
+}
+
+message douyin_get_v_active_follow_follower_userinfo_request {
+  int64 login_user_id = 1;
+  int64 user_id = 4;
+  int32 is_follow_follower = 5; //1表示follow 2表示follower
+  bool is_v = 6;
+  bool is_active = 7;
+}
+
+message test_in {
+  int64 count = 1;
+}
+
+message empty {}

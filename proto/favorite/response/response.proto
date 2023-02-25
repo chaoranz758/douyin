@@ -1,0 +1,39 @@
+syntax = "proto3";
+package response;
+option go_package = "douyin/proto/favorite/response";
+import "video/response/response.proto";
+
+message douyin_favorite_action_response {
+  int32 code = 2;
+}
+
+message douyin_favorite_list_response {
+  repeated response.Video video_list = 1;
+  int32 code = 2;
+}
+
+message douyin_favorite_count_response {
+  repeated int64 favorite_count = 1;
+  repeated bool is_favorite = 3;
+  int32 code = 2;
+}
+
+message douyin_favorite_id_list_response {
+  int32 code = 2;
+  repeated int64 video_id = 1;
+}
+
+message douyin_favorite_list_id_list_response {
+  int32 code = 2;
+  repeated favorite_video_id_list favorite_video_id_list = 1;
+}
+
+message favorite_video_id_list {
+  repeated int64 video_id = 1;
+}
+
+message douyin_get_user_favorited_count_response {
+  repeated int64 favorited_count = 1;
+  repeated int64 favorite_count = 2;
+  int32 code = 3;
+}

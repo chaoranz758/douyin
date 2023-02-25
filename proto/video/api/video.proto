@@ -1,0 +1,24 @@
+syntax = "proto3";
+package api;
+option go_package = "douyin/proto/video/api";
+import "video/request/request.proto";
+import "video/response/response.proto";
+
+service Video {
+  rpc PublishVideo(request.douyin_publish_action_request) returns (response.douyin_publish_action_response);//视频投稿
+  rpc GetVideoList(request.douyin_feed_request) returns (response.douyin_feed_response);//视频流接口
+  rpc GetPublishVideo(request.douyin_publish_list_request) returns (response.douyin_publish_list_response);//发布列表
+
+  rpc GetUserPublishVideoCount(request.douyin_get_user_publish_video_count_request) returns (response.douyin_get_user_publish_video_count_response);//获取用户发布视频数
+  rpc GetUserPublishVideoCountList(request.douyin_get_user_publish_video_count_list_request) returns (response.douyin_get_user_publish_video_count_list_response);//批量获取用户发布视频数
+
+  rpc PushVBasicInfoInit(request.douyin_push_v_info_init_request) returns (response.douyin_push_v_info_init_response);//填入大V或活跃用户的初始基本信息
+  rpc PushActiveBasicInfoInit(request.douyin_push_active_info_init_request) returns (response.douyin_push_active_info_init_response);//填入大V或活跃用户的初始基本信息
+
+  rpc JudgeVideoAuthor(request.douyin_judge_video_author_request) returns (response.douyin_judge_video_author_response);//判断视频作者是否为大V或活跃用户
+  rpc PushVActiveFavoriteVideo(request.douyin_push_v_active_favorite_video_request) returns (response.douyin_push_v_active_favorite_video_response);//将视频基本信息存入大V或活跃用户喜欢的视频redis
+  rpc PushVActiveFavoriteVideoRevert(request.douyin_push_v_active_favorite_video_request) returns (response.douyin_push_v_active_favorite_video_response);//回滚-将视频基本信息存入大V或活跃用户喜欢的视频redis
+  rpc DeleteVActiveFavoriteVideo(request.douyin_delete_v_active_favorite_video_request) returns (response.douyin_delete_v_active_favorite_video_response);//将视频基本信息从大V或活跃用户喜欢的视频redis中删除
+  rpc GetVActiveFavoriteVideo(request.douyin_get_v_active_favorite_video_request) returns (response.douyin_get_v_active_favorite_video_response);//获取存入大V或活跃用户喜欢的视频redis的基本视频信息
+  rpc GetVideoListInner(request.douyin_get_video_list_request) returns (response.douyin_get_video_list_response);//根据视频id批量获取视频基本信息 只用mysql
+}

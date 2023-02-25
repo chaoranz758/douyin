@@ -1,0 +1,52 @@
+{
+  "douyinWeb": {
+    "name": "douyin_web",
+    "mode": "dev",
+    "port": 8080
+  },
+  "log": {
+    "level": "debug",
+    "filename": "log/douyin_web.log",
+    "max_size": 200,
+    "max_age": 30,
+    "max_backups": 7
+  },
+  "consulServer": {
+    "ip":"192.168.182.137",
+    "port": 8500
+  },
+  "consulRegister": {
+    "id": "douyin_web-10.122.238.133-8080",
+    "ip":"10.122.238.133",
+    "port": 8080,
+    "name": "douyin_web",
+    "tags": "douyin:douyin_web"
+  },
+  "consulCheckHealth": {
+    "ip":"10.122.238.133",
+    "port": 8080,
+    "timeout": "10s",
+    "interval": "1m",
+    "deregisterCriticalServiceAfter": "1m"
+  },
+  "requestGRPCServer": {
+    "userService": {
+      "name": "user_service"
+    },
+    "videoService": {
+      "name": "video_service"
+    },
+    "commitService": {
+      "name": "comment_service"
+    },
+    "favoriteService": {
+      "name": "favorite_service"
+    },
+    "followService": {
+      "name": "follow_service"
+    },
+    "messageService": {
+      "name": "message_service"
+    }
+  }
+}

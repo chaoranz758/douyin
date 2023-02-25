@@ -1,0 +1,17 @@
+syntax = "proto3";
+package api;
+option go_package = "douyin/proto/favorite/api";
+import "favorite/request/request.proto";
+import "favorite/response/response.proto";
+
+service Favorite {
+  rpc FavoriteVideo(request.douyin_favorite_action_request) returns (response.douyin_favorite_action_response);//赞操作
+  rpc GetFavoriteVideoList(request.douyin_favorite_list_request) returns (response.douyin_favorite_list_response);//喜欢列表
+
+  rpc GetUserFavoriteVideoIdList(request.douyin_favorite_id_list_request) returns (response.douyin_favorite_id_list_response);//喜欢id列表
+  rpc GetUserListFavoriteVideoIdList(request.douyin_favorite_list_id_list_request) returns (response.douyin_favorite_list_id_list_response);//喜欢id列表
+
+  rpc GetUserFavoritedCount(request.douyin_get_user_favorited_count_request) returns (response.douyin_get_user_favorited_count_response);//获取用户的被点赞总数和点赞视频数
+
+  rpc GetFavoriteCount(request.douyin_favorite_count_request) returns (response.douyin_favorite_count_response); //批量获取视频点赞数并判断用户是否对视频点赞(传过来的userId=0时不判断是否点赞)
+}

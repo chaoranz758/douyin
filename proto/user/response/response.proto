@@ -1,0 +1,84 @@
+syntax = "proto3";
+package response;
+option go_package = "douyin/proto/user/response";
+
+message douyin_user_register_response {
+  int64 user_id = 1;
+  int32 code = 2;//code==0表示网络等错误没连上rpc服务器 code=1表示成功 code==2表示rpc服务器在处理业务逻辑时出错
+  string token = 3;
+}
+
+message douyin_user_login_response {
+  int64 user_id = 1;
+  int32 code = 2;
+  string token = 3;
+}
+
+message douyin_user_response {
+  User user = 1;
+  int32 code = 2;
+}
+
+message douyin_user_list_response {
+  repeated User user = 1;
+  int32 code = 2;
+}
+
+message douyin_user_is_influencer_activer_response {
+  bool isInfluencer = 1;
+  bool isActiver = 2;
+  int32 code = 3;
+}
+
+message douyin_user_video_count_set_response {
+  int32 code = 1;
+}
+
+message douyin_user_favorite_video_count_set_response {
+  int32 code = 1;
+}
+
+message douyin_user_follow_count_set_response {
+  int32 code = 1;
+}
+
+message douyin_user_follower_count_set_response {
+  int32 code = 1;
+}
+
+message douyin_push_v_set_response {
+  int32 code = 1;
+  int32 is_exist = 2;
+  bool is_active = 3;
+}
+
+message User {
+  int64 id = 1;
+  string name = 2;
+  int64 follow_count = 3;
+  int64 follower_count = 4;
+  bool is_follow = 5;
+  string avatar = 6; //用户头像
+  string background_image = 7; //用户个人页顶部大图
+  string signature = 8; //个人简介
+  int64 total_favorited = 9; //获赞数量
+  int64 work_count = 10; //作品数量
+  int64 favorite_count = 11; //点赞数量
+}
+
+message douyin_v_active_follow_follower_userinfo_response {
+  int32 code = 1;
+}
+
+message douyin_delete_v_active_follow_follower_userinfo_response {
+  int32 code = 1;
+}
+
+message douyin_get_v_active_follow_follower_userinfo_response {
+  int32 code = 1;
+  repeated User user = 2;
+}
+
+message test_in {
+  string msg = 1;
+}

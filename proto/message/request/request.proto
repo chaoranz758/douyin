@@ -1,0 +1,21 @@
+syntax = "proto3";
+package request;
+option go_package = "douyin/proto/message/request";
+
+message douyin_message_chat_request {
+  int64 to_user_id = 1;
+  int64 login_user_id = 4;
+  int64 pre_msg_time=3;
+}
+
+message douyin_message_action_request {
+  int64 to_user_id = 1;
+  int32 action_type = 2;
+  string content = 3;
+  int64 login_user_id = 4;
+}
+
+message douyin_get_user_friend_message_request {
+  int64 login_user_id = 1;
+  repeated int64 to_user_id = 2;
+}

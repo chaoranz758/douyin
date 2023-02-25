@@ -1,0 +1,64 @@
+{
+    "douyinService": {
+    "name": "video_service",
+    "mode": "dev",
+    "port": 9085,
+    "protocol": "tcp"
+  },
+  "log": {
+    "level": "debug",
+    "filename": "log/video_service.log",
+    "max_size": 200,
+    "max_age": 30,
+    "max_backups": 7
+  },
+  "mysql": {
+    "host": "127.0.0.1",
+    "port": 3306,
+    "user": "root",
+    "password": "mkgg1314",
+    "dbname": "video_service",
+    "MaxIdleConns": 10,
+    "MaxOpenConns": 100
+  },
+  "redis": {
+    "host": "127.0.0.1",
+    "port": 6379,
+    "password": "",
+    "db": 0,
+    "PoolSize": 100
+  },
+  "snowflake": {
+    "starttime": "2022-10-20",
+    "machineID": 1
+  },
+  "consulServer": {
+    "ip":"192.168.182.137",
+    "port": 8500
+  },
+  "consulRegister": {
+    "id": "video_service-10.122.238.133-9085",
+    "ip":"10.122.238.133",
+    "port": 9085,
+    "name": "video_service",
+    "tags": "douyin:video_service"
+  },
+  "consulCheckHealth": {
+    "ip":"10.122.238.133",
+    "port": 9085,
+    "timeout": "10s",
+    "interval": "10s",
+    "deregisterCriticalServiceAfter": "1m"
+  },
+  "requestGRPCServer": {
+    "userService": {
+      "name": "user_service"
+    },
+    "commitService": {
+      "name": "comment_service"
+    },
+    "favoriteService": {
+      "name": "favorite_service"
+    }
+  }
+}

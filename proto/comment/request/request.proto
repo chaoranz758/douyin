@@ -1,0 +1,25 @@
+syntax = "proto3";
+package request;
+option go_package = "douyin/proto/comment/request";
+
+message douyin_comment_action_request {
+  int64 video_id = 1;
+  int32 action_type = 2;
+  string comment_text = 3;
+  int64 comment_id = 4;
+  int64 login_user_id = 5;
+}
+
+message douyin_comment_list_request {
+  int64 video_id = 1;
+  int64 login_user_id = 5;
+}
+
+message douyin_comment_count_request {
+  repeated int64 video_id = 1;
+}
+
+message douyin_push_v_comment_basic_info_init_request {
+  int64 user_id = 1;
+  repeated int64 video_id_list = 2;
+}

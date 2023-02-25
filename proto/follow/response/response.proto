@@ -1,0 +1,69 @@
+syntax = "proto3";
+package response;
+option go_package = "douyin/proto/follow/response";
+import "user/response/response.proto";
+
+message douyin_relation_action_response {
+  int32 code = 1;
+}
+
+message douyin_relation_follow_list_response {
+  repeated response.User user_list = 1;
+  int32 code = 2;
+}
+
+message douyin_relation_follower_list_response {
+  repeated response.User user_list = 1;
+  int32 code = 2;
+}
+
+message douyin_relation_friend_list_response {
+  repeated FriendUser user_list = 1;
+  int32 code = 2;
+}
+
+message FriendUser {
+  int64 id = 1;
+  string name = 2;
+  int64 follow_count = 3;
+  int64 follower_count = 4;
+  bool is_follow = 5;
+  string message = 6;
+  int64 msgType = 7;
+}
+
+message douyin_follow_follower_count_response {
+  int64 follow_count = 1;
+  int64 follower_count = 2;
+  int32 code = 3;
+}
+
+message douyin_follow_follower_list_count_response {
+  repeated int64 follow_count = 1;
+  repeated int64 follower_count = 2;
+  int32 code = 3;
+}
+
+message douyin_get_follow_response {
+  bool is_follow = 1;
+  int32 code = 2;
+}
+
+message douyin_get_follow_list_response {
+  repeated bool is_follow = 1;
+  int32 code = 2;
+}
+
+message douyin_get_follow_follower_id_list_response {
+  int32 code = 2;
+  repeated follow_list follow_list = 3;
+  repeated follower_list follower_list = 4;
+}
+
+message follow_list {
+  repeated int64 user_id = 1;
+}
+
+message follower_list {
+  repeated int64 user_id = 1;
+}

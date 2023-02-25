@@ -1,0 +1,31 @@
+syntax = "proto3";
+package response;
+option go_package = "douyin/proto/comment/response";
+import "user/response/response.proto";
+
+message douyin_comment_action_response {
+  Comment comment = 1;
+  int32 code = 2;
+
+}
+
+message douyin_comment_list_response {
+  repeated Comment comment_list = 1;
+  int32 code = 2;
+}
+
+message douyin_comment_count_response {
+  repeated int64 comment_count = 1;
+  int32 code = 2;
+}
+
+message Comment {
+  int64 id = 1;
+  response.User user = 2;
+  string content = 3;
+  string create_date = 4;
+}
+
+message douyin_push_v_comment_basic_info_init_response {
+  int32 code = 2;
+}
