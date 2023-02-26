@@ -1,15 +1,15 @@
 package main
 
 import (
-	"douyin/service/user/client"
-	"douyin/service/user/config"
 	"douyin/service/user/dao/mysql"
 	"douyin/service/user/dao/redis"
-	"douyin/service/user/job"
-	log1 "douyin/service/user/log"
-	"douyin/service/user/pkg/consul"
-	"douyin/service/user/pkg/snowflake"
-	"douyin/service/user/server"
+	"douyin/service/user/initialize/config"
+	consul2 "douyin/service/user/initialize/consul"
+	"douyin/service/user/initialize/grpc_client"
+	"douyin/service/user/initialize/job"
+	log1 "douyin/service/user/initialize/log"
+	"douyin/service/user/initialize/server"
+	"douyin/service/user/initialize/snowflake"
 	"fmt"
 	"go.uber.org/zap"
 	"log"
@@ -32,7 +32,7 @@ func main() {
 	defer zap.L().Sync()
 	zap.L().Debug("logger init success...")
 	//3.初始化consul连接
-	if err := consul.Init(fmt.Sprintf("%s:%d", config.Config.ConsulServer.Ip, config.Config.ConsulServer.Port)); err != nil {
+	if err := consul2.Init(fmt.Sprintf("%s:%d", config.Config.ConsulServer.Ip, config.Config.ConsulServer.Port)); err != nil {
 		zap.L().Error("init consul connection failed...", zap.Error(err))
 		log.Fatal("init consul connection failed...")
 	}
@@ -56,23 +56,23 @@ func main() {
 	}
 	zap.L().Debug("snowflake generate id success...")
 	//7.向consul注册服务
-	if err := consul.RegisterService(); err != nil {
+	if err := consul2.RegisterService(); err != nil {
 		zap.L().Error("register service to consul failed...", zap.Error(err))
 		log.Fatal("register service to consul failed...")
 	}
 	zap.L().Debug("register service to consul success...")
 	//8.启动grpc客户端
-	if err := client.InitFollow(); err != nil {
+	if err := grpc_client.InitFollow(); err != nil {
 		zap.L().Error("init follow rpc client failed...", zap.Error(err))
 		log.Fatal("init follow rpc client failed...")
 	}
 	zap.L().Debug("init follow rpc client success...")
-	if err := client.InitVideo(); err != nil {
+	if err := grpc_client.InitVideo(); err != nil {
 		zap.L().Error("init video rpc client failed...", zap.Error(err))
 		log.Fatal("init video rpc client failed...")
 	}
 	zap.L().Debug("init video rpc client success...")
-	if err := client.InitFavorite(); err != nil {
+	if err := grpc_client.InitFavorite(); err != nil {
 		zap.L().Error("init favorite rpc client failed...", zap.Error(err))
 		log.Fatal("init favorite rpc client failed...")
 	}

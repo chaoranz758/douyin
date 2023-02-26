@@ -6,11 +6,11 @@ import (
 	"douyin/proto/comment/response"
 	request1 "douyin/proto/user/request"
 	request2 "douyin/proto/video/request"
-	"douyin/service/comment/client"
 	"douyin/service/comment/dao/mysql"
 	"douyin/service/comment/dao/redis"
+	"douyin/service/comment/initialize/grpc_client"
 	"douyin/service/comment/model"
-	"douyin/service/comment/pkg/snowflake"
+	"douyin/service/message/util"
 	"encoding/json"
 	"fmt"
 	"go.uber.org/zap"
@@ -35,7 +35,7 @@ const (
 func CommentVideo(req *request.DouyinCommentActionRequest) (*response.Comment, error) {
 	if req.ActionType == 1 {
 		//判断视频作者是否为大V并将视频作者ID返回
-		res, err := client.VideoClient.JudgeVideoAuthor(context.Background(), &request2.DouyinJudgeVideoAuthorRequest{
+		res, err := grpc_client.VideoClient.JudgeVideoAuthor(context.Background(), &request2.DouyinJudgeVideoAuthorRequest{
 			VideoId: req.VideoId,
 		})
 		if err != nil {
@@ -50,7 +50,7 @@ func CommentVideo(req *request.DouyinCommentActionRequest) (*response.Comment, e
 		}
 		if res.IsV == true {
 			time := time2.Now()
-			commitID := snowflake.GenID()
+			commitID := util.GenID()
 			var comment = model.Commit{
 				CommitID:  commitID,
 				VideoID:   req.VideoId,
@@ -89,7 +89,7 @@ func CommentVideo(req *request.DouyinCommentActionRequest) (*response.Comment, e
 				return nil, err
 			}
 			//获取评论的用户信息
-			res1, err := client.UserClient.GetUserInfo(context.Background(), &request1.DouyinUserRequest{
+			res1, err := grpc_client.UserClient.GetUserInfo(context.Background(), &request1.DouyinUserRequest{
 				UserId:      req.LoginUserId,
 				LoginUserId: req.LoginUserId,
 			})
@@ -113,7 +113,7 @@ func CommentVideo(req *request.DouyinCommentActionRequest) (*response.Comment, e
 			return &comments, nil
 		}
 		time := time2.Now()
-		commitID := snowflake.GenID()
+		commitID := util.GenID()
 		var comment = model.Commit{
 			CommitID:  commitID,
 			VideoID:   req.VideoId,
@@ -137,7 +137,7 @@ func CommentVideo(req *request.DouyinCommentActionRequest) (*response.Comment, e
 			return nil, err
 		}
 		//获取评论的用户信息
-		res1, err := client.UserClient.GetUserInfo(context.Background(), &request1.DouyinUserRequest{
+		res1, err := grpc_client.UserClient.GetUserInfo(context.Background(), &request1.DouyinUserRequest{
 			UserId:      req.LoginUserId,
 			LoginUserId: req.LoginUserId,
 		})
@@ -161,7 +161,7 @@ func CommentVideo(req *request.DouyinCommentActionRequest) (*response.Comment, e
 		return &comments, nil
 	}
 	//判断视频作者是否为大V并将视频作者ID返回
-	res, err := client.VideoClient.JudgeVideoAuthor(context.Background(), &request2.DouyinJudgeVideoAuthorRequest{
+	res, err := grpc_client.VideoClient.JudgeVideoAuthor(context.Background(), &request2.DouyinJudgeVideoAuthorRequest{
 		VideoId: req.VideoId,
 	})
 	if err != nil {
@@ -226,7 +226,7 @@ func CommentVideo(req *request.DouyinCommentActionRequest) (*response.Comment, e
 
 func GetCommentVideoList(req *request.DouyinCommentListRequest) ([]*response.Comment, error) {
 	//判断视频作者是否为大V并将视频作者ID返回
-	res, err := client.VideoClient.JudgeVideoAuthor(context.Background(), &request2.DouyinJudgeVideoAuthorRequest{
+	res, err := grpc_client.VideoClient.JudgeVideoAuthor(context.Background(), &request2.DouyinJudgeVideoAuthorRequest{
 		VideoId: req.VideoId,
 	})
 	if err != nil {
@@ -261,7 +261,7 @@ func GetCommentVideoList(req *request.DouyinCommentListRequest) ([]*response.Com
 			userId = append(userId, c.UserID)
 			cs = append(cs, c)
 		}
-		res1, err := client.UserClient.GetUserInfoList(context.Background(), &request1.DouyinUserListRequest{
+		res1, err := grpc_client.UserClient.GetUserInfoList(context.Background(), &request1.DouyinUserListRequest{
 			UserId:      userId,
 			LoginUserId: req.LoginUserId,
 		})
@@ -291,7 +291,7 @@ func GetCommentVideoList(req *request.DouyinCommentListRequest) ([]*response.Com
 	for i := 0; i < len(cs); i++ {
 		userId = append(userId, cs[i].UserID)
 	}
-	res1, err := client.UserClient.GetUserInfoList(context.Background(), &request1.DouyinUserListRequest{
+	res1, err := grpc_client.UserClient.GetUserInfoList(context.Background(), &request1.DouyinUserListRequest{
 		UserId:      userId,
 		LoginUserId: req.LoginUserId,
 	})

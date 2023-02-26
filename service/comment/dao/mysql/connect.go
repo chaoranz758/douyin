@@ -1,7 +1,7 @@
 package mysql
 
 import (
-	"douyin/service/comment/config"
+	"douyin/service/comment/initialize/config"
 	"fmt"
 	"go.uber.org/zap"
 	"gorm.io/driver/mysql"
@@ -37,6 +37,6 @@ func Init() (err error) {
 	sqlDB.SetMaxIdleConns(config.Config.Mysql.MaxIdleConns)
 	//打开数据库连接的最大数量
 	sqlDB.SetMaxOpenConns(config.Config.Mysql.MaxOpenConns)
-	createTable()
+	//createTable()
 	return nil
 }

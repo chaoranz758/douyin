@@ -2,7 +2,7 @@ package redis
 
 import (
 	"context"
-	"douyin/service/follow/config"
+	"douyin/service/follow/initialize/config"
 	"fmt"
 	"github.com/go-redis/redis/v8"
 	"go.uber.org/zap"

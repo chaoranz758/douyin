@@ -7,11 +7,11 @@ import (
 	request1 "douyin/proto/user/request"
 	"douyin/proto/video/request"
 	response2 "douyin/proto/video/response"
-	"douyin/service/video/client"
 	"douyin/service/video/dao/mysql"
 	"douyin/service/video/dao/redis"
+	"douyin/service/video/initialize/grpc_client"
 	"douyin/service/video/model"
-	"douyin/service/video/pkg/snowflake"
+	"douyin/service/video/util"
 	"encoding/json"
 	"errors"
 	"github.com/dtm-labs/dtmcli"
@@ -26,7 +26,6 @@ import (
 )
 
 const (
-	userVideoCount                      = 5
 	errorConnectToGRPCServer            = "connect to grpc server failed"
 	errorExeVActiveSet                  = "exe if request is V or active from redis set failed"
 	errorPublishVUserVideo              = "publish v user video information to redis failed"
@@ -82,7 +81,7 @@ func PublishVideoDtm(req *request.DouyinPublishActionRequest) error {
 		}
 		wf.NewBranch().OnRollback(func(bb *dtmcli.BranchBarrier) error {
 			//检查一下在不在集合里面，不再集合里面就删除
-			res1, err := client.UserClientDtm.AddUserVideoCountSetRevert(wf.Context, &request)
+			res1, err := grpc_client.UserClientDtm.AddUserVideoCountSetRevert(wf.Context, &request)
 			if err != nil {
 				if res1 == nil {
 					zap.L().Error(errorConnectToGRPCServer, zap.Error(err))
@@ -103,7 +102,7 @@ func PublishVideoDtm(req *request.DouyinPublishActionRequest) error {
 			return err
 		}
 		if count == 4 {
-			res1, err := client.UserClientDtm.AddUserVideoCountSet(wf.Context, &request)
+			res1, err := grpc_client.UserClientDtm.AddUserVideoCountSet(wf.Context, &request)
 			if err != nil {
 				if res1 == nil {
 					zap.L().Error(errorConnectToGRPCServer, zap.Error(err))
@@ -119,8 +118,8 @@ func PublishVideoDtm(req *request.DouyinPublishActionRequest) error {
 		_, err = wf.NewBranch().Do(func(bb *dtmcli.BranchBarrier) ([]byte, error) {
 			v := new(model.Video)
 			//生成视频ID
-			videoID := snowflake.GenID()
-			res, err := client.UserClient.UserIsInfluencerActiver(context.Background(), &request1.DouyinUserIsInfluencerActiverRequest{
+			videoID := util.GenID()
+			res, err := grpc_client.UserClient.UserIsInfluencerActiver(context.Background(), &request1.DouyinUserIsInfluencerActiverRequest{
 				UserId: req.UserId,
 			})
 			if err != nil {
@@ -254,7 +253,7 @@ func PublishVideoDtm(req *request.DouyinPublishActionRequest) error {
 
 func GetPublishVideo(req *request.DouyinPublishListRequest) ([]*response2.Video, error) {
 	vs := make([]model.Video, 0)
-	res, err := client.UserClient.UserIsInfluencerActiver(context.Background(), &request1.DouyinUserIsInfluencerActiverRequest{
+	res, err := grpc_client.UserClient.UserIsInfluencerActiver(context.Background(), &request1.DouyinUserIsInfluencerActiverRequest{
 		UserId: req.UserId,
 	})
 	if err != nil {
@@ -312,7 +311,7 @@ func GetPublishVideo(req *request.DouyinPublishListRequest) ([]*response2.Video,
 		idList = append(idList, vs[i].VideoID)
 	}
 	//从点赞service读视频的点赞数并查看用户是否对视频点赞
-	res1, err := client.FavoriteClient.GetFavoriteCount(context.Background(), &request2.DouyinFavoriteCountRequest{
+	res1, err := grpc_client.FavoriteClient.GetFavoriteCount(context.Background(), &request2.DouyinFavoriteCountRequest{
 		VideoId: idList,
 		UserId:  req.LoginId,
 	})
@@ -327,7 +326,7 @@ func GetPublishVideo(req *request.DouyinPublishListRequest) ([]*response2.Video,
 		}
 	}
 	//从评论service读视频的评论数
-	res2, err := client.CommentClient.GetCommentCount(context.Background(), &request3.DouyinCommentCountRequest{
+	res2, err := grpc_client.CommentClient.GetCommentCount(context.Background(), &request3.DouyinCommentCountRequest{
 		VideoId: idList,
 	})
 	if err != nil {
@@ -341,7 +340,7 @@ func GetPublishVideo(req *request.DouyinPublishListRequest) ([]*response2.Video,
 		}
 	}
 	//从用户服务获取用户信息,只需获取一个，因为每个视频的作者都是同一个人
-	res3, err := client.UserClient.GetUserInfo(context.Background(), &request1.DouyinUserRequest{
+	res3, err := grpc_client.UserClient.GetUserInfo(context.Background(), &request1.DouyinUserRequest{
 		UserId:      req.UserId,
 		LoginUserId: req.LoginId,
 	})
@@ -633,7 +632,7 @@ func GetVideoList(req *request.DouyinFeedRequest) ([]*response2.Video, int64, er
 		return nil, 0, nil
 	}
 	//从点赞service读视频的点赞数并查看用户是否对视频点赞
-	res1, err := client.FavoriteClient.GetFavoriteCount(context.Background(), &request2.DouyinFavoriteCountRequest{
+	res1, err := grpc_client.FavoriteClient.GetFavoriteCount(context.Background(), &request2.DouyinFavoriteCountRequest{
 		VideoId: videoIdList,
 		UserId:  req.LoginUserId,
 	})
@@ -648,7 +647,7 @@ func GetVideoList(req *request.DouyinFeedRequest) ([]*response2.Video, int64, er
 		}
 	}
 	//从评论service读视频的评论数
-	res2, err := client.CommentClient.GetCommentCount(context.Background(), &request3.DouyinCommentCountRequest{
+	res2, err := grpc_client.CommentClient.GetCommentCount(context.Background(), &request3.DouyinCommentCountRequest{
 		VideoId: videoIdList,
 	})
 	if err != nil {
@@ -661,7 +660,7 @@ func GetVideoList(req *request.DouyinFeedRequest) ([]*response2.Video, int64, er
 			return nil, 0, err
 		}
 	}
-	res3, err := client.UserClient.GetUserInfoList(context.Background(), &request1.DouyinUserListRequest{
+	res3, err := grpc_client.UserClient.GetUserInfoList(context.Background(), &request1.DouyinUserListRequest{
 		UserId:      userIdList,
 		LoginUserId: req.LoginUserId,
 	})
@@ -703,7 +702,7 @@ func PushVActiveBasicInfoInit(req *request.DouyinPushVInfoInitRequest) ([]int64,
 		}
 	}
 	//找点赞的视频id
-	res, err := client.FavoriteClient.GetUserFavoriteVideoIdList(context.Background(), &request2.DouyinFavoriteIdListRequest{
+	res, err := grpc_client.FavoriteClient.GetUserFavoriteVideoIdList(context.Background(), &request2.DouyinFavoriteIdListRequest{
 		UserId: req.UserId,
 	})
 	if err != nil {
@@ -747,7 +746,7 @@ func PushActiveBasicInfoInit(req *request.DouyinPushActiveInfoInitRequest) error
 		vss = append(vss, vs1)
 	}
 	//找点赞的视频id
-	res, err := client.FavoriteClient.GetUserListFavoriteVideoIdList(context.Background(), &request2.DouyinFavoriteListIdListRequest{
+	res, err := grpc_client.FavoriteClient.GetUserListFavoriteVideoIdList(context.Background(), &request2.DouyinFavoriteListIdListRequest{
 		UserId: req.UserId,
 	})
 	if err != nil {

@@ -1,14 +1,14 @@
 package main
 
 import (
-	"douyin/service/favorite/client"
-	"douyin/service/favorite/config"
 	"douyin/service/favorite/dao/mysql"
 	"douyin/service/favorite/dao/redis"
-	"douyin/service/favorite/dao/rocketmq"
-	log1 "douyin/service/favorite/log"
-	"douyin/service/favorite/pkg/consul"
-	"douyin/service/favorite/server"
+	"douyin/service/favorite/initialize/config"
+	consul2 "douyin/service/favorite/initialize/consul"
+	"douyin/service/favorite/initialize/grpc_client"
+	log1 "douyin/service/favorite/initialize/log"
+	rocketmq2 "douyin/service/favorite/initialize/rocketmq"
+	"douyin/service/favorite/initialize/server"
 	"fmt"
 	"go.uber.org/zap"
 	"log"
@@ -31,7 +31,7 @@ func main() {
 	defer zap.L().Sync()
 	zap.L().Debug("logger init success...")
 	//3.初始化consul连接
-	if err := consul.Init(fmt.Sprintf("%s:%d", config.Config.ConsulServer.Ip, config.Config.ConsulServer.Port)); err != nil {
+	if err := consul2.Init(fmt.Sprintf("%s:%d", config.Config.ConsulServer.Ip, config.Config.ConsulServer.Port)); err != nil {
 		zap.L().Error("init consul connection failed...", zap.Error(err))
 		log.Fatal("init consul connection failed...")
 	}
@@ -49,75 +49,75 @@ func main() {
 	}
 	zap.L().Debug("init redis success...")
 	//6.向consul注册服务
-	if err := consul.RegisterService(); err != nil {
+	if err := consul2.RegisterService(); err != nil {
 		zap.L().Error("register service to consul failed...", zap.Error(err))
 		log.Fatal("register service to consul failed...")
 	}
 	zap.L().Debug("register service to consul success...")
 	//7.启动grpc客户端
-	if err := client.InitUser(); err != nil {
+	if err := grpc_client.InitUser(); err != nil {
 		zap.L().Error("init user rpc client failed...", zap.Error(err))
 		log.Fatal("init user rpc client failed...")
 	}
 	zap.L().Debug("init user rpc client success...")
-	if err := client.InitVideo(); err != nil {
+	if err := grpc_client.InitVideo(); err != nil {
 		zap.L().Error("init video rpc client failed...", zap.Error(err))
 		log.Fatal("init video rpc client failed...")
 	}
 	zap.L().Debug("init video rpc client success...")
-	if err := client.InitComment(); err != nil {
+	if err := grpc_client.InitComment(); err != nil {
 		zap.L().Error("init comment rpc client failed...", zap.Error(err))
 		log.Fatal("init comment rpc client failed...")
 	}
 	zap.L().Debug("init comment rpc client success...")
-	if err := client.InitUserDtm(); err != nil {
+	if err := grpc_client.InitUserDtm(); err != nil {
 		zap.L().Error("init user dtm rpc client failed...", zap.Error(err))
 		log.Fatal("init user dtm rpc client failed...")
 	}
 	zap.L().Debug("init user dtm rpc client success...")
-	if err := client.InitVideoDtm(); err != nil {
+	if err := grpc_client.InitVideoDtm(); err != nil {
 		zap.L().Error("init video dtm rpc client failed...", zap.Error(err))
 		log.Fatal("init video dtm rpc client failed...")
 	}
 	zap.L().Debug("init video dtm rpc client success...")
 	//8.启动grpc生产者
-	if err := rocketmq.InitProducer1(); err != nil {
+	if err := rocketmq2.InitProducer1(); err != nil {
 		zap.L().Error("init producer1 failed...", zap.Error(err))
 		log.Fatal("init producer1 failed, err:", err)
 	}
 	zap.L().Debug("init producer1 success...")
-	if err := rocketmq.InitProducer2(); err != nil {
+	if err := rocketmq2.InitProducer2(); err != nil {
 		zap.L().Error("init producer2 failed...", zap.Error(err))
 		log.Fatal("init producer2 failed, err:", err)
 	}
 	zap.L().Debug("init producer2 success...")
-	if err := rocketmq.InitProducer3(); err != nil {
+	if err := rocketmq2.InitProducer3(); err != nil {
 		zap.L().Error("init producer3 failed...", zap.Error(err))
 		log.Fatal("init producer3 failed, err:", err)
 	}
 	zap.L().Debug("init producer3 success...")
-	if err := rocketmq.InitProducer4(); err != nil {
+	if err := rocketmq2.InitProducer4(); err != nil {
 		zap.L().Error("init producer4 failed...", zap.Error(err))
 		log.Fatal("init producer4 failed, err:", err)
 	}
 	zap.L().Debug("init producer4 success...")
 	//9.开启grpc消费者
-	if err := rocketmq.InitCustomer1(); err != nil {
+	if err := rocketmq2.InitCustomer1(); err != nil {
 		zap.L().Error("init customer1 failed...", zap.Error(err))
 		log.Fatal("init customer1 failed, err:", err)
 	}
 	zap.L().Debug("init customer1 success...")
-	if err := rocketmq.InitCustomer2(); err != nil {
+	if err := rocketmq2.InitCustomer2(); err != nil {
 		zap.L().Error("init customer2 failed...", zap.Error(err))
 		log.Fatal("init customer2 failed, err:", err)
 	}
 	zap.L().Debug("init customer2 success...")
-	if err := rocketmq.InitCustomer3(); err != nil {
+	if err := rocketmq2.InitCustomer3(); err != nil {
 		zap.L().Error("init customer3 failed...", zap.Error(err))
 		log.Fatal("init customer3 failed, err:", err)
 	}
 	zap.L().Debug("init customer3 success...")
-	if err := rocketmq.InitCustomer4(); err != nil {
+	if err := rocketmq2.InitCustomer4(); err != nil {
 		zap.L().Error("init customer4 failed...", zap.Error(err))
 		log.Fatal("init customer4 failed, err:", err)
 	}

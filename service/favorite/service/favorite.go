@@ -8,10 +8,10 @@ import (
 	request1 "douyin/proto/user/request"
 	request2 "douyin/proto/video/request"
 	"douyin/proto/video/response"
-	"douyin/service/favorite/client"
 	"douyin/service/favorite/dao/mysql"
 	"douyin/service/favorite/dao/redis"
-	"douyin/service/favorite/dao/rocketmq"
+	"douyin/service/favorite/initialize/grpc_client"
+	"douyin/service/favorite/initialize/rocketmq"
 	"douyin/service/favorite/model"
 	"encoding/json"
 	"errors"
@@ -103,7 +103,7 @@ func FavoriteVideoDtm(req *request.DouyinFavoriteActionRequest) error {
 	//点赞接口
 	if req.ActionType == 1 {
 		//判断点赞视频的用户是否为大V或活跃用户
-		res, err := client.UserClient.UserIsInfluencerActiver(context.Background(), &request1.DouyinUserIsInfluencerActiverRequest{
+		res, err := grpc_client.UserClient.UserIsInfluencerActiver(context.Background(), &request1.DouyinUserIsInfluencerActiverRequest{
 			UserId: req.LoginUserId,
 		})
 		if err != nil {
@@ -117,7 +117,7 @@ func FavoriteVideoDtm(req *request.DouyinFavoriteActionRequest) error {
 			}
 		}
 		//判断视频作者是否为大V或活跃用户,若并将视频作者ID返回
-		res1, err := client.VideoClient.JudgeVideoAuthor(context.Background(), &request2.DouyinJudgeVideoAuthorRequest{
+		res1, err := grpc_client.VideoClient.JudgeVideoAuthor(context.Background(), &request2.DouyinJudgeVideoAuthorRequest{
 			VideoId: req.VideoId,
 		})
 		if err != nil {
@@ -141,7 +141,7 @@ func FavoriteVideoDtm(req *request.DouyinFavoriteActionRequest) error {
 			wf.NewBranch().OnRollback(func(bb *dtmcli.BranchBarrier) error {
 				if res.IsInfluencer == true || res.IsActiver == true {
 					if res1.IsV == false && res1.IsActive == false {
-						res2, err := client.VideoClientDtm.PushVActiveFavoriteVideoRevert(wf.Context, &request2.DouyinPushVActiveFavoriteVideoRequest{
+						res2, err := grpc_client.VideoClientDtm.PushVActiveFavoriteVideoRevert(wf.Context, &request2.DouyinPushVActiveFavoriteVideoRequest{
 							VideoId:           req1.VideoId,
 							IsV:               req1.IsV,
 							IsActive:          req1.IsActive,
@@ -168,7 +168,7 @@ func FavoriteVideoDtm(req *request.DouyinFavoriteActionRequest) error {
 			//视频服务分支
 			if res.IsInfluencer == true || res.IsActiver == true {
 				if res1.IsV == false && res1.IsActive == false {
-					res2, err := client.VideoClientDtm.PushVActiveFavoriteVideo(wf.Context, &request2.DouyinPushVActiveFavoriteVideoRequest{
+					res2, err := grpc_client.VideoClientDtm.PushVActiveFavoriteVideo(wf.Context, &request2.DouyinPushVActiveFavoriteVideoRequest{
 						VideoId:           req1.VideoId,
 						IsV:               req1.IsV,
 						IsActive:          req1.IsActive,
@@ -192,7 +192,7 @@ func FavoriteVideoDtm(req *request.DouyinFavoriteActionRequest) error {
 			zap.L().Info("点赞接口调用视频服务正向事务成功")
 			//用户服务回滚分支
 			wf.NewBranch().OnRollback(func(bb *dtmcli.BranchBarrier) error {
-				res5, err := client.UserClientDtm.AddUserFavoriteVideoCountSetRevert(wf.Context, &request1.DouyinUserVideoCountSetRequest{
+				res5, err := grpc_client.UserClientDtm.AddUserFavoriteVideoCountSetRevert(wf.Context, &request1.DouyinUserVideoCountSetRequest{
 					UserId: req1.LoginUserId,
 				})
 				if err != nil {
@@ -216,7 +216,7 @@ func FavoriteVideoDtm(req *request.DouyinFavoriteActionRequest) error {
 					return err
 				}
 				if count == 4 {
-					res5, err := client.UserClientDtm.AddUserFavoriteVideoCountSet(wf.Context, &request1.DouyinUserVideoCountSetRequest{
+					res5, err := grpc_client.UserClientDtm.AddUserFavoriteVideoCountSet(wf.Context, &request1.DouyinUserVideoCountSetRequest{
 						UserId: req1.LoginUserId,
 					})
 					if err != nil {
@@ -350,7 +350,7 @@ func FavoriteVideoDtm(req *request.DouyinFavoriteActionRequest) error {
 		return nil
 	}
 	//判断点赞视频的用户是否为大V或活跃用户
-	res, err := client.UserClient.UserIsInfluencerActiver(context.Background(), &request1.DouyinUserIsInfluencerActiverRequest{
+	res, err := grpc_client.UserClient.UserIsInfluencerActiver(context.Background(), &request1.DouyinUserIsInfluencerActiverRequest{
 		UserId: req.LoginUserId,
 	})
 	if err != nil {
@@ -364,7 +364,7 @@ func FavoriteVideoDtm(req *request.DouyinFavoriteActionRequest) error {
 		}
 	}
 	//判断视频作者是否为大V或活跃用户
-	res1, err := client.VideoClient.JudgeVideoAuthor(context.Background(), &request2.DouyinJudgeVideoAuthorRequest{
+	res1, err := grpc_client.VideoClient.JudgeVideoAuthor(context.Background(), &request2.DouyinJudgeVideoAuthorRequest{
 		VideoId: req.VideoId,
 	})
 	if err != nil {
@@ -388,7 +388,7 @@ func FavoriteVideoDtm(req *request.DouyinFavoriteActionRequest) error {
 		wf.NewBranch().OnRollback(func(bb *dtmcli.BranchBarrier) error {
 			if res.IsInfluencer == true || res.IsActiver == true {
 				if res1.IsV == false && res1.IsActive == false {
-					res2, err := client.VideoClientDtm.PushVActiveFavoriteVideo(wf.Context, &request2.DouyinPushVActiveFavoriteVideoRequest{
+					res2, err := grpc_client.VideoClientDtm.PushVActiveFavoriteVideo(wf.Context, &request2.DouyinPushVActiveFavoriteVideoRequest{
 						VideoId:           req1.VideoId,
 						IsV:               req1.IsV,
 						IsActive:          req1.IsActive,
@@ -416,7 +416,7 @@ func FavoriteVideoDtm(req *request.DouyinFavoriteActionRequest) error {
 		if res.IsInfluencer == true || res.IsActiver == true {
 			if res1.IsV == false && res1.IsActive == false {
 				//将大V或活跃用户喜欢的基本视频信息从redis删除
-				res2, err := client.VideoClientDtm.DeleteVActiveFavoriteVideo(wf.Context, &request2.DouyinDeleteVActiveFavoriteVideoRequest{
+				res2, err := grpc_client.VideoClientDtm.DeleteVActiveFavoriteVideo(wf.Context, &request2.DouyinDeleteVActiveFavoriteVideoRequest{
 					UserId:            req.LoginUserId,
 					VideoId:           req.VideoId,
 					LoginUserIsV:      res.IsInfluencer,
@@ -546,272 +546,9 @@ func FavoriteVideoDtm(req *request.DouyinFavoriteActionRequest) error {
 	return nil
 }
 
-func FavoriteVideo(req *request.DouyinFavoriteActionRequest) error {
-	//点赞接口
-	if req.ActionType == 1 {
-		//判断点赞视频的用户是否为大V或活跃用户
-		res, err := client.UserClient.UserIsInfluencerActiver(context.Background(), &request1.DouyinUserIsInfluencerActiverRequest{
-			UserId: req.LoginUserId,
-		})
-		if err != nil {
-			if res == nil {
-				zap.L().Error(errorConnectToGRPCServer, zap.Error(err))
-				return err
-			}
-			if res.Code == 2 {
-				zap.L().Error(errorExeVActiveSet, zap.Error(err))
-				return err
-			}
-		}
-		//判断视频作者是否为大V或活跃用户,若并将视频作者ID返回
-		res1, err := client.VideoClient.JudgeVideoAuthor(context.Background(), &request2.DouyinJudgeVideoAuthorRequest{
-			VideoId: req.VideoId,
-		})
-		if err != nil {
-			if res1 == nil {
-				zap.L().Error(errorConnectToGRPCServer, zap.Error(err))
-				return err
-			}
-			if res1.Code == 2 {
-				zap.L().Error(errorJudgeVideoAuthor, zap.Error(err))
-				return err
-			}
-		}
-		//点赞视频的用户是大V或活跃用户
-		if res.IsInfluencer == true || res.IsActiver == true {
-			//大V或活跃用户走消息队列：将视频信息存入redis 后续流程
-			if res1.IsV == true || res1.IsActive == true {
-				var producer1Message = Producer1Message{
-					LoginUserID:       req.LoginUserId,
-					VideoID:           req.VideoId,
-					IsV:               res1.IsV,
-					IsActive:          res1.IsActive,
-					LoginUserIsV:      res.IsInfluencer,
-					LoginUserIsActive: res.IsActiver,
-					AuthorId:          res1.AuthorId,
-				}
-				data, _ := json.Marshal(producer1Message)
-				msg := &primitive.Message{
-					Topic: "favoriteTopic1",
-					Body:  data,
-				}
-				sync, err := rocketmq.Producer1.SendSync(context.Background(), msg)
-				if err != nil {
-					zap.L().Error("生产者1消息发送失败", zap.Error(err))
-					return err
-				}
-				zap.L().Info("生产者1消息发送成功")
-				fmt.Printf("生产者1发送的消息：%v\n", sync.String())
-				return nil
-			}
-			//读视频基本信息并将视频信息存入大V或活跃用户点赞的基本视频信息redis
-			res2, err := client.VideoClient.PushVActiveFavoriteVideo(context.Background(), &request2.DouyinPushVActiveFavoriteVideoRequest{
-				VideoId:           req.VideoId,
-				IsV:               false,
-				IsActive:          false,
-				LoginUserIsActive: res.IsActiver,
-				LoginUserIsV:      res.IsInfluencer,
-				LoginUserId:       req.LoginUserId,
-				AuthorId:          res1.AuthorId,
-			})
-			if err != nil {
-				if res2 == nil {
-					zap.L().Error(errorConnectToGRPCServer, zap.Error(err))
-					return err
-				}
-				if res2.Code == 2 {
-					zap.L().Error(errorPushVActiveFavoriteVideo, zap.Error(err))
-					return err
-				}
-			}
-			//点赞关系写入Mysql点赞表
-			var f = model.Favorite{
-				VideoID: req.VideoId,
-				UserID:  req.LoginUserId,
-			}
-			if err := mysql.CreateFavoriteRelation(&f); err != nil {
-				zap.L().Error(errorFavoriteRelation, zap.Error(err))
-				return err
-			}
-			//redis用户点赞视频数、视频点赞数、被赞总数加一
-			_, err = redis.AddFavoriteCount(req.LoginUserId, req.VideoId, res1.AuthorId)
-			if err != nil {
-				zap.L().Error(errorAddFavoriteCount, zap.Error(err))
-				return err
-			}
-			return nil
-		}
-		//大V或活跃用户走消息队列：后续流程
-		if res1.IsV == true || res1.IsActive == true {
-			var producer2Message = Producer2Message{
-				LoginUserID: req.LoginUserId,
-				VideoID:     req.VideoId,
-				AuthorId:    res1.AuthorId,
-			}
-			data, _ := json.Marshal(producer2Message)
-			msg := &primitive.Message{
-				Topic: "favoriteTopic2",
-				Body:  data,
-			}
-			sync, err := rocketmq.Producer2.SendSync(context.Background(), msg)
-			if err != nil {
-				zap.L().Error("生产者2消息发送失败", zap.Error(err))
-				return err
-			}
-			zap.L().Info("生产者2消息发送成功")
-			fmt.Printf("生产者2发送的消息：%v\n", sync.String())
-			return nil
-		}
-		//点赞关系写入Mysql点赞表
-		var f = model.Favorite{
-			VideoID: req.VideoId,
-			UserID:  req.LoginUserId,
-		}
-		if err := mysql.CreateFavoriteRelation(&f); err != nil {
-			zap.L().Error(errorFavoriteRelation, zap.Error(err))
-			return err
-		}
-		//redis用户点赞视频数和视频点赞数加一
-		count, err := redis.AddFavoriteCount(req.LoginUserId, req.VideoId, res1.AuthorId)
-		if err != nil {
-			zap.L().Error(errorAddFavoriteCount, zap.Error(err))
-			return err
-		}
-		//如果count等于5,加入列表
-		if count == 5 {
-			res5, err := client.UserClient.AddUserFavoriteVideoCountSet(context.Background(), &request1.DouyinUserVideoCountSetRequest{
-				UserId: req.LoginUserId,
-			})
-			if err != nil {
-				if res5 == nil {
-					zap.L().Error(errorConnectToGRPCServer, zap.Error(err))
-					return err
-				}
-				if res5.Code == 2 {
-					zap.L().Error(errorAddUserFavoriteVideoCountSet, zap.Error(err))
-					return err
-				}
-			}
-		}
-		return nil
-	}
-	//判断点赞视频的用户是否为大V或活跃用户
-	res, err := client.UserClient.UserIsInfluencerActiver(context.Background(), &request1.DouyinUserIsInfluencerActiverRequest{
-		UserId: req.LoginUserId,
-	})
-	if err != nil {
-		if res == nil {
-			zap.L().Error(errorConnectToGRPCServer, zap.Error(err))
-			return err
-		}
-		if res.Code == 2 {
-			zap.L().Error(errorExeVActiveSet, zap.Error(err))
-			return err
-		}
-	}
-	//判断视频作者是否为大V或活跃用户
-	res1, err := client.VideoClient.JudgeVideoAuthor(context.Background(), &request2.DouyinJudgeVideoAuthorRequest{
-		VideoId: req.VideoId,
-	})
-	if err != nil {
-		if res1 == nil {
-			zap.L().Error(errorConnectToGRPCServer, zap.Error(err))
-			return err
-		}
-		if res1.Code == 2 {
-			zap.L().Error(errorJudgeVideoAuthor, zap.Error(err))
-			return err
-		}
-	}
-	if res.IsInfluencer == true || res.IsActiver == true {
-		if res1.IsV == true || res1.IsActive == true {
-			//大V或活跃用户走消息队列
-			var producer3Message = Producer3Message{
-				LoginUserID:       req.LoginUserId,
-				VideoID:           req.VideoId,
-				LoginUserIsActive: res.IsActiver,
-				LoginUserIsV:      res.IsInfluencer,
-				AuthorId:          res1.AuthorId,
-			}
-			data, _ := json.Marshal(producer3Message)
-			msg := &primitive.Message{
-				Topic: "favoriteTopic3",
-				Body:  data,
-			}
-			sync, err := rocketmq.Producer3.SendSync(context.Background(), msg)
-			if err != nil {
-				zap.L().Error("生产者3消息发送失败", zap.Error(err))
-				return err
-			}
-			zap.L().Info("生产者3消息发送成功")
-			fmt.Printf("生产者3发送的消息：%v\n", sync.String())
-			return nil
-		}
-		//将大V或活跃用户喜欢的基本视频信息从redis删除
-		res2, err := client.VideoClient.DeleteVActiveFavoriteVideo(context.Background(), &request2.DouyinDeleteVActiveFavoriteVideoRequest{
-			UserId:            req.LoginUserId,
-			VideoId:           req.VideoId,
-			LoginUserIsV:      res.IsInfluencer,
-			LoginUserIsActive: res.IsActiver,
-		})
-		if err != nil {
-			if res2 == nil {
-				zap.L().Error(errorConnectToGRPCServer, zap.Error(err))
-				return err
-			}
-			if res2.Code == 2 {
-				zap.L().Error(errorDeleteVActiveFavoriteVideo, zap.Error(err))
-				return err
-			}
-		}
-		//点赞关系从Mysql点赞表删除
-		if err := mysql.DeleteFavoriteRelation(req.VideoId, req.LoginUserId); err != nil {
-			zap.L().Error(errorDeleteFavoriteRelation, zap.Error(err))
-			return err
-		}
-		//redis用户点赞视频数和视频点赞数减一
-		if err := redis.SubFavoriteCount(req.LoginUserId, req.VideoId, res1.AuthorId); err != nil {
-			zap.L().Error(errorSubFavoriteCount, zap.Error(err))
-			return err
-		}
-		return nil
-	}
-	if res1.IsV == true || res1.IsActive == true {
-		var producer4Message = Producer4Message{
-			LoginUserID: req.LoginUserId,
-			VideoID:     req.VideoId,
-			AuthorId:    res1.AuthorId,
-		}
-		data, _ := json.Marshal(producer4Message)
-		msg := &primitive.Message{
-			Topic: "favoriteTopic4",
-			Body:  data,
-		}
-		sync, err := rocketmq.Producer4.SendSync(context.Background(), msg)
-		if err != nil {
-			zap.L().Error("生产者4消息发送失败", zap.Error(err))
-			return err
-		}
-		zap.L().Info("生产者4消息发送成功")
-		fmt.Printf("生产者4发送的消息：%v\n", sync.String())
-		return nil
-	}
-	//点赞关系从Mysql点赞表删除
-	if err := mysql.DeleteFavoriteRelation(req.VideoId, req.LoginUserId); err != nil {
-		zap.L().Error(errorDeleteFavoriteRelation, zap.Error(err))
-		return err
-	}
-	//redis用户点赞视频数和视频点赞数减一
-	if err := redis.SubFavoriteCount(req.LoginUserId, req.VideoId, res1.AuthorId); err != nil {
-		zap.L().Error(errorSubFavoriteCount, zap.Error(err))
-		return err
-	}
-	return nil
-}
-
 func GetFavoriteVideoList(req *request.DouyinFavoriteListRequest) ([]*response.Video, error) {
 	//判断请求的用户是否为大V或活跃用户
-	res, err := client.UserClient.UserIsInfluencerActiver(context.Background(), &request1.DouyinUserIsInfluencerActiverRequest{
+	res, err := grpc_client.UserClient.UserIsInfluencerActiver(context.Background(), &request1.DouyinUserIsInfluencerActiverRequest{
 		UserId: req.UserId,
 	})
 	if err != nil {
@@ -826,7 +563,7 @@ func GetFavoriteVideoList(req *request.DouyinFavoriteListRequest) ([]*response.V
 	}
 	//若请求用户是大V或活跃用户，从redis中取视频基本信息
 	if res.IsInfluencer == true || res.IsActiver == true {
-		res1, err := client.VideoClient.GetVActiveFavoriteVideo(context.Background(), &request2.DouyinGetVActiveFavoriteVideoRequest{
+		res1, err := grpc_client.VideoClient.GetVActiveFavoriteVideo(context.Background(), &request2.DouyinGetVActiveFavoriteVideoRequest{
 			UserId:   req.UserId,
 			IsV:      res.IsInfluencer,
 			IsActive: res.IsActiver,
@@ -860,7 +597,7 @@ func GetFavoriteVideoList(req *request.DouyinFavoriteListRequest) ([]*response.V
 			return nil, err
 		}
 		//读视频对应的评论数
-		res3, err := client.CommentClient.GetCommentCount(context.Background(), &request3.DouyinCommentCountRequest{
+		res3, err := grpc_client.CommentClient.GetCommentCount(context.Background(), &request3.DouyinCommentCountRequest{
 			VideoId: idList,
 		})
 		if err != nil {
@@ -874,7 +611,7 @@ func GetFavoriteVideoList(req *request.DouyinFavoriteListRequest) ([]*response.V
 			}
 		}
 		//按照用户列表获取用户信息
-		res4, err := client.UserClient.GetUserInfoList(context.Background(), &request1.DouyinUserListRequest{
+		res4, err := grpc_client.UserClient.GetUserInfoList(context.Background(), &request1.DouyinUserListRequest{
 			UserId:      userIdList,
 			LoginUserId: req.LoginUserId,
 		})
@@ -917,7 +654,7 @@ func GetFavoriteVideoList(req *request.DouyinFavoriteListRequest) ([]*response.V
 		for i := 0; i < len(f); i++ {
 			idList = append(idList, f[i].VideoID)
 		}
-		res2, err := client.VideoClient.GetVideoListInner(context.Background(), &request2.DouyinGetVideoListRequest{
+		res2, err := grpc_client.VideoClient.GetVideoListInner(context.Background(), &request2.DouyinGetVideoListRequest{
 			VideoId: idList,
 		})
 		if err != nil {
@@ -947,7 +684,7 @@ func GetFavoriteVideoList(req *request.DouyinFavoriteListRequest) ([]*response.V
 			return nil, err
 		}
 		//读视频对应的评论数
-		res3, err := client.CommentClient.GetCommentCount(context.Background(), &request3.DouyinCommentCountRequest{
+		res3, err := grpc_client.CommentClient.GetCommentCount(context.Background(), &request3.DouyinCommentCountRequest{
 			VideoId: idList,
 		})
 		if err != nil {
@@ -961,7 +698,7 @@ func GetFavoriteVideoList(req *request.DouyinFavoriteListRequest) ([]*response.V
 			}
 		}
 		//按照用户列表获取用户信息
-		res4, err := client.UserClient.GetUserInfoList(context.Background(), &request1.DouyinUserListRequest{
+		res4, err := grpc_client.UserClient.GetUserInfoList(context.Background(), &request1.DouyinUserListRequest{
 			UserId:      userIdList,
 			LoginUserId: req.LoginUserId,
 		})

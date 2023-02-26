@@ -6,9 +6,9 @@ import (
 	"douyin/proto/message/response"
 	"douyin/service/message/dao/mysql"
 	"douyin/service/message/dao/redis"
-	"douyin/service/message/dao/rocketmq"
+	"douyin/service/message/initialize/rocketmq"
 	"douyin/service/message/model"
-	"douyin/service/message/pkg/snowflake"
+	"douyin/service/message/util"
 	"encoding/json"
 	"fmt"
 	"github.com/apache/rocketmq-client-go/v2/primitive"
@@ -51,7 +51,7 @@ type ProducerMessage1 struct {
 }
 
 func SendMessage(req *request.DouyinMessageActionRequest) error {
-	messageId := snowflake.GenID()
+	messageId := util.GenID()
 	time := time2.Now().UnixMilli()
 	//查看登录用户是否是消息活跃用户
 	b, err := redis.IsMessageActiveUser(req.LoginUserId)

@@ -2,7 +2,7 @@ package redis
 
 import (
 	"context"
-	"douyin/service/comment/config"
+	"douyin/service/comment/initialize/config"
 	"fmt"
 	"github.com/go-redis/redis/v8"
 	"go.uber.org/zap"

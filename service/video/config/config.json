@@ -67,8 +67,8 @@
     "namespace": "video_service",
     "timeoutMs": 5000,
     "notLoadCacheAtStart": false,
-    "logDir": "tmp/nacos/log",
-    "cacheDir": "tmp/nacos/cache",
+    "logDir": "log/nacos/log",
+    "cacheDir": "config/nacos/cache",
     "logLevel": "debug",
     "dataID": "video_service.json",
     "group": "dev"

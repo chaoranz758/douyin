@@ -1,15 +1,15 @@
 package main
 
 import (
-	"douyin/service/message/config"
 	"douyin/service/message/dao/mysql"
 	"douyin/service/message/dao/redis"
-	"douyin/service/message/dao/rocketmq"
-	"douyin/service/message/job"
-	log1 "douyin/service/message/log"
-	"douyin/service/message/pkg/consul"
-	"douyin/service/message/pkg/snowflake"
-	"douyin/service/message/server"
+	"douyin/service/message/initialize/config"
+	consul2 "douyin/service/message/initialize/consul"
+	"douyin/service/message/initialize/job"
+	log1 "douyin/service/message/initialize/log"
+	rocketmq2 "douyin/service/message/initialize/rocketmq"
+	"douyin/service/message/initialize/server"
+	"douyin/service/message/initialize/snowflake"
 	"fmt"
 	"go.uber.org/zap"
 	"log"
@@ -32,7 +32,7 @@ func main() {
 	defer zap.L().Sync()
 	zap.L().Debug("logger init success...")
 	//3.初始化consul连接
-	if err := consul.Init(fmt.Sprintf("%s:%d", config.Config.ConsulServer.Ip, config.Config.ConsulServer.Port)); err != nil {
+	if err := consul2.Init(fmt.Sprintf("%s:%d", config.Config.ConsulServer.Ip, config.Config.ConsulServer.Port)); err != nil {
 		zap.L().Error("init consul connection failed...", zap.Error(err))
 		log.Fatal("init consul connection failed...")
 	}
@@ -56,19 +56,19 @@ func main() {
 	}
 	zap.L().Debug("snowflake generate id success...")
 	//7.向consul注册服务
-	if err := consul.RegisterService(); err != nil {
+	if err := consul2.RegisterService(); err != nil {
 		zap.L().Error("register service to consul failed...", zap.Error(err))
 		log.Fatal("register service to consul failed...")
 	}
 	zap.L().Debug("register service to consul success...")
 	//8.启动grpc生产者
-	if err := rocketmq.InitProducer1(); err != nil {
+	if err := rocketmq2.InitProducer1(); err != nil {
 		zap.L().Error("init producer1 failed...", zap.Error(err))
 		log.Fatal("init producer1 failed, err:", err)
 	}
 	zap.L().Debug("init producer1 success...")
 	//9.开启grpc消费者
-	if err := rocketmq.InitCustomer1(); err != nil {
+	if err := rocketmq2.InitCustomer1(); err != nil {
 		zap.L().Error("init customer1 failed...", zap.Error(err))
 		log.Fatal("init customer1 failed, err:", err)
 	}

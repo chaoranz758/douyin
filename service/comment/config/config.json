@@ -64,8 +64,8 @@
     "namespace": "comment_service",
     "timeoutMs": 5000,
     "notLoadCacheAtStart": true,
-    "logDir": "tmp/nacos/log",
-    "cacheDir": "tmp/nacos/cache",
+    "logDir": "log/nacos/log",
+    "cacheDir": "config/nacos/cache",
     "logLevel": "debug",
     "dataID": "comment_service.json",
     "group": "dev"

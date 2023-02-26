@@ -67,8 +67,8 @@
     "namespace": "favorite_service",
     "timeoutMs": 5000,
     "notLoadCacheAtStart": false,
-    "logDir": "tmp/nacos/log",
-    "cacheDir": "tmp/nacos/cache",
+    "logDir": "log/nacos/log",
+    "cacheDir": "config/nacos/cache",
     "logLevel": "debug",
     "dataID": "favorite_service.json",
     "group": "dev"

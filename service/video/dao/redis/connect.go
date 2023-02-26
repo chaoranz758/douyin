@@ -2,7 +2,7 @@ package redis
 
 import (
 	"context"
-	"douyin/service/video/config"
+	"douyin/service/video/initialize/config"
 	"fmt"
 	"github.com/go-redis/redis/v8"
 	"go.uber.org/zap"

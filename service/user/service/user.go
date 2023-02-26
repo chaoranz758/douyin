@@ -8,12 +8,10 @@ import (
 	"douyin/proto/user/request"
 	"douyin/proto/user/response"
 	request2 "douyin/proto/video/request"
-	"douyin/service/user/client"
 	"douyin/service/user/dao/mysql"
 	"douyin/service/user/dao/redis"
+	"douyin/service/user/initialize/grpc_client"
 	"douyin/service/user/model"
-	"douyin/service/user/pkg/jwt"
-	"douyin/service/user/pkg/snowflake"
 	"douyin/service/user/util"
 	"errors"
 	"fmt"
@@ -60,7 +58,6 @@ const (
 	errorGetVFollowUserInfo          = "get v follower user information failed"
 	errorPushVSet                    = "push v set failed"
 	errorPushVString                 = "push v string failed"
-	errorGetFollowFollowerIdList     = "get follow follower id list failed"
 	errorPushVFollowFollowerInfoInit = "push v follow follower information init failed"
 	errorDeleteActiveAllInfo         = "delete active all information failed"
 	errorGetUserPublishVideoCount    = "get user publish video count failed"
@@ -132,13 +129,13 @@ var (
 )
 
 func UserRegister(req *request.DouyinUserRegisterRequest) (int64, string, error) {
-	userID := snowflake.GenID()
+	userID := util.GenID()
 	password, err := util.ScryptPw(req.Password)
 	if err != nil {
 		zap.L().Error(errorEncryptPassword, zap.Error(err))
 		return 0, "", err
 	}
-	token, err := jwt.GenToken(req.Username, userID)
+	token, err := util.GenToken(req.Username, userID)
 	if err != nil {
 		zap.L().Error(errorGenToken, zap.Error(err))
 		return 0, "", err
@@ -176,7 +173,7 @@ func UserLogin(req *request.DouyinUserLoginRequest) (int64, string, error) {
 		zap.L().Error(errorPassword, zap.Error(err))
 		return 0, "", errors.New(errorPassword)
 	}
-	token, err := jwt.GenToken(req.Username, u.UserID)
+	token, err := util.GenToken(req.Username, u.UserID)
 	if err != nil {
 		zap.L().Error(errorGenToken, zap.Error(err))
 		return 0, "", err
@@ -191,7 +188,7 @@ func UserLogin(req *request.DouyinUserLoginRequest) (int64, string, error) {
 func GetUserInfo(req *request.DouyinUserRequest) (*model.User, bool, int64, int64, int64, error) {
 	var u model.User
 	//读取用户粉丝数和关注数
-	res, err := client.FollowClient.GetFollowFollower(context.Background(), &request1.DouyinFollowFollowerCountRequest{
+	res, err := grpc_client.FollowClient.GetFollowFollower(context.Background(), &request1.DouyinFollowFollowerCountRequest{
 		UserId: req.UserId,
 	})
 	if err != nil {
@@ -205,7 +202,7 @@ func GetUserInfo(req *request.DouyinUserRequest) (*model.User, bool, int64, int6
 		}
 	}
 	//读取用户作品数量
-	resGetUserPublishVideoCount, err := client.VideoClient.GetUserPublishVideoCount(context.Background(), &request2.DouyinGetUserPublishVideoCountRequest{
+	resGetUserPublishVideoCount, err := grpc_client.VideoClient.GetUserPublishVideoCount(context.Background(), &request2.DouyinGetUserPublishVideoCountRequest{
 		UserId: req.UserId,
 	})
 	if err != nil {
@@ -221,7 +218,7 @@ func GetUserInfo(req *request.DouyinUserRequest) (*model.User, bool, int64, int6
 	var users []int64
 	users = append(users, req.UserId)
 	//读取用户点赞视频数量和获赞总数
-	resGetUserFavoritedCount, err := client.FavoriteClient.GetUserFavoritedCount(context.Background(), &request3.DouyinGetUserFavoritedCountRequest{
+	resGetUserFavoritedCount, err := grpc_client.FavoriteClient.GetUserFavoritedCount(context.Background(), &request3.DouyinGetUserFavoritedCountRequest{
 		UserId: users,
 	})
 	if err != nil {
@@ -253,7 +250,7 @@ func GetUserInfo(req *request.DouyinUserRequest) (*model.User, bool, int64, int6
 			u.Follower = res.FollowerCount
 			return &u, true, resGetUserFavoritedCount.FavoritedCount[0], resGetUserPublishVideoCount.Count, resGetUserFavoritedCount.FavoriteCount[0], nil
 		}
-		res1, err := client.FollowClient.GetFollowInfo(context.Background(), &request1.DouyinGetFollowRequest{
+		res1, err := grpc_client.FollowClient.GetFollowInfo(context.Background(), &request1.DouyinGetFollowRequest{
 			UserId:   req.LoginUserId,
 			ToUserId: req.UserId,
 		})
@@ -344,7 +341,7 @@ func GetUserInfoList(req *request.DouyinUserListRequest) ([]*response.User, erro
 	}
 	result := make([]*response.User, 0, len(req.UserId))
 	//批量读取用户粉丝数和关注数
-	res, err := client.FollowClient.GetFollowFollowerList(context.Background(), &request1.DouyinFollowFollowerListCountRequest{
+	res, err := grpc_client.FollowClient.GetFollowFollowerList(context.Background(), &request1.DouyinFollowFollowerListCountRequest{
 		UserId: req.UserId,
 	})
 	if err != nil {
@@ -358,7 +355,7 @@ func GetUserInfoList(req *request.DouyinUserListRequest) ([]*response.User, erro
 		}
 	}
 	//读取用户作品数量
-	resGetUserPublishVideoCount, err := client.VideoClient.GetUserPublishVideoCountList(context.Background(), &request2.DouyinGetUserPublishVideoCountListRequest{
+	resGetUserPublishVideoCount, err := grpc_client.VideoClient.GetUserPublishVideoCountList(context.Background(), &request2.DouyinGetUserPublishVideoCountListRequest{
 		UserId: req.UserId,
 	})
 	if err != nil {
@@ -372,7 +369,7 @@ func GetUserInfoList(req *request.DouyinUserListRequest) ([]*response.User, erro
 		}
 	}
 	//读取用户点赞视频数量和获赞总数
-	resGetUserFavoritedCount, err := client.FavoriteClient.GetUserFavoritedCount(context.Background(), &request3.DouyinGetUserFavoritedCountRequest{
+	resGetUserFavoritedCount, err := grpc_client.FavoriteClient.GetUserFavoritedCount(context.Background(), &request3.DouyinGetUserFavoritedCountRequest{
 		UserId: req.UserId,
 	})
 	if err != nil {
@@ -451,7 +448,7 @@ func GetUserInfoList(req *request.DouyinUserListRequest) ([]*response.User, erro
 		var res1 *response1.DouyinGetFollowListResponse
 		if len(noVActiveNotSamePeopleList) != 0 {
 			//2.既不是大V又不是活跃用户但不是同一个人
-			res1, err = client.FollowClient.GetFollowInfoList(context.Background(), &request1.DouyinGetFollowListRequest{
+			res1, err = grpc_client.FollowClient.GetFollowInfoList(context.Background(), &request1.DouyinGetFollowListRequest{
 				UserId:   req.LoginUserId,
 				ToUserId: noVActiveNotSamePeopleList,
 			})
@@ -907,7 +904,7 @@ func GetVActiveFollowerUserinfo(req *request.DouyinGetVActiveFollowFollowerUseri
 			userIdList = append(userIdList, users[i].UserID)
 		}
 		//批量读取用户粉丝数和关注数
-		res, err := client.FollowClient.GetFollowFollowerList(context.Background(), &request1.DouyinFollowFollowerListCountRequest{
+		res, err := grpc_client.FollowClient.GetFollowFollowerList(context.Background(), &request1.DouyinFollowFollowerListCountRequest{
 			UserId: userIdList,
 		})
 		if err != nil {
@@ -921,7 +918,7 @@ func GetVActiveFollowerUserinfo(req *request.DouyinGetVActiveFollowFollowerUseri
 			}
 		}
 		//读取用户作品数量
-		resGetUserPublishVideoCount, err := client.VideoClient.GetUserPublishVideoCountList(context.Background(), &request2.DouyinGetUserPublishVideoCountListRequest{
+		resGetUserPublishVideoCount, err := grpc_client.VideoClient.GetUserPublishVideoCountList(context.Background(), &request2.DouyinGetUserPublishVideoCountListRequest{
 			UserId: userIdList,
 		})
 		if err != nil {
@@ -935,7 +932,7 @@ func GetVActiveFollowerUserinfo(req *request.DouyinGetVActiveFollowFollowerUseri
 			}
 		}
 		//读取用户点赞视频数量和获赞总数
-		resGetUserFavoritedCount, err := client.FavoriteClient.GetUserFavoritedCount(context.Background(), &request3.DouyinGetUserFavoritedCountRequest{
+		resGetUserFavoritedCount, err := grpc_client.FavoriteClient.GetUserFavoritedCount(context.Background(), &request3.DouyinGetUserFavoritedCountRequest{
 			UserId: userIdList,
 		})
 		if err != nil {
@@ -977,7 +974,7 @@ func GetVActiveFollowerUserinfo(req *request.DouyinGetVActiveFollowFollowerUseri
 			zap.L().Error(errorGetActiveFollowerInfoList, zap.Error(err))
 			return nil, err
 		}
-		res1, err := client.FollowClient.GetFollowInfoList(context.Background(), &request1.DouyinGetFollowListRequest{
+		res1, err := grpc_client.FollowClient.GetFollowInfoList(context.Background(), &request1.DouyinGetFollowListRequest{
 			UserId:   req.LoginUserId,
 			ToUserId: noVActiveList,
 		})
@@ -1043,7 +1040,7 @@ func GetVActiveFollowerUserinfo(req *request.DouyinGetVActiveFollowFollowerUseri
 			userIdList = append(userIdList, users[i].UserID)
 		}
 		//批量读取用户粉丝数和关注数
-		res, err := client.FollowClient.GetFollowFollowerList(context.Background(), &request1.DouyinFollowFollowerListCountRequest{
+		res, err := grpc_client.FollowClient.GetFollowFollowerList(context.Background(), &request1.DouyinFollowFollowerListCountRequest{
 			UserId: userIdList,
 		})
 		if err != nil {
@@ -1057,7 +1054,7 @@ func GetVActiveFollowerUserinfo(req *request.DouyinGetVActiveFollowFollowerUseri
 			}
 		}
 		//读取用户作品数量
-		resGetUserPublishVideoCount, err := client.VideoClient.GetUserPublishVideoCountList(context.Background(), &request2.DouyinGetUserPublishVideoCountListRequest{
+		resGetUserPublishVideoCount, err := grpc_client.VideoClient.GetUserPublishVideoCountList(context.Background(), &request2.DouyinGetUserPublishVideoCountListRequest{
 			UserId: userIdList,
 		})
 		if err != nil {
@@ -1071,7 +1068,7 @@ func GetVActiveFollowerUserinfo(req *request.DouyinGetVActiveFollowFollowerUseri
 			}
 		}
 		//读取用户点赞视频数量和获赞总数
-		resGetUserFavoritedCount, err := client.FavoriteClient.GetUserFavoritedCount(context.Background(), &request3.DouyinGetUserFavoritedCountRequest{
+		resGetUserFavoritedCount, err := grpc_client.FavoriteClient.GetUserFavoritedCount(context.Background(), &request3.DouyinGetUserFavoritedCountRequest{
 			UserId: userIdList,
 		})
 		if err != nil {
@@ -1113,7 +1110,7 @@ func GetVActiveFollowerUserinfo(req *request.DouyinGetVActiveFollowFollowerUseri
 			zap.L().Error(errorGetActiveFollowerInfoList, zap.Error(err))
 			return nil, err
 		}
-		res1, err := client.FollowClient.GetFollowInfoList(context.Background(), &request1.DouyinGetFollowListRequest{
+		res1, err := grpc_client.FollowClient.GetFollowInfoList(context.Background(), &request1.DouyinGetFollowListRequest{
 			UserId:   req.LoginUserId,
 			ToUserId: noVActiveList,
 		})

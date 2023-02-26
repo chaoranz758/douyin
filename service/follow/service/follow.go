@@ -7,10 +7,10 @@ import (
 	request2 "douyin/proto/message/request"
 	request1 "douyin/proto/user/request"
 	"douyin/proto/user/response"
-	"douyin/service/follow/client"
 	"douyin/service/follow/dao/mysql"
 	"douyin/service/follow/dao/redis"
-	"douyin/service/follow/dao/rocketmq"
+	"douyin/service/follow/initialize/grpc_client"
+	"douyin/service/follow/initialize/rocketmq/producer"
 	"douyin/service/follow/model"
 	"encoding/json"
 	"fmt"
@@ -71,7 +71,7 @@ type ProducerMessage3 struct {
 func FollowUserDtm(req *request.DouyinRelationActionRequest) error {
 	if req.ActionType == 1 {
 		//判断当前登录用户是否为大V或活跃用户
-		res, err := client.UserClient.UserIsInfluencerActiver(context.Background(), &request1.DouyinUserIsInfluencerActiverRequest{
+		res, err := grpc_client.UserClient.UserIsInfluencerActiver(context.Background(), &request1.DouyinUserIsInfluencerActiverRequest{
 			UserId: req.LoginUserId,
 		})
 		if err != nil {
@@ -85,7 +85,7 @@ func FollowUserDtm(req *request.DouyinRelationActionRequest) error {
 			}
 		}
 		//判断关注用户是否为大V或活跃用户
-		res1, err := client.UserClient.UserIsInfluencerActiver(context.Background(), &request1.DouyinUserIsInfluencerActiverRequest{
+		res1, err := grpc_client.UserClient.UserIsInfluencerActiver(context.Background(), &request1.DouyinUserIsInfluencerActiverRequest{
 			UserId: req.ToUserId,
 		})
 		if err != nil {
@@ -103,7 +103,7 @@ func FollowUserDtm(req *request.DouyinRelationActionRequest) error {
 			//大V或活跃用户分支事务
 			wf.NewBranch().OnRollback(func(bb *dtmcli.BranchBarrier) error {
 				if res.IsInfluencer == true || res.IsActiver == true {
-					res1, err := client.UserClientDtm.PushVActiveFollowerUserinfoRevert(wf.Context, &request1.DouyinVActiveFollowFollowerUserinfoRequest{
+					res1, err := grpc_client.UserClientDtm.PushVActiveFollowerUserinfoRevert(wf.Context, &request1.DouyinVActiveFollowFollowerUserinfoRequest{
 						LoginUserId:      req.LoginUserId,
 						UserId:           req.ToUserId,
 						IsV:              res1.IsInfluencer,
@@ -127,7 +127,7 @@ func FollowUserDtm(req *request.DouyinRelationActionRequest) error {
 				return nil
 			})
 			if res.IsInfluencer == true || res.IsActiver == true {
-				res1, err := client.UserClientDtm.PushVActiveFollowerUserinfo(wf.Context, &request1.DouyinVActiveFollowFollowerUserinfoRequest{
+				res1, err := grpc_client.UserClientDtm.PushVActiveFollowerUserinfo(wf.Context, &request1.DouyinVActiveFollowFollowerUserinfoRequest{
 					LoginUserId:      req.LoginUserId,
 					UserId:           req.ToUserId,
 					IsV:              res1.IsInfluencer,
@@ -150,7 +150,7 @@ func FollowUserDtm(req *request.DouyinRelationActionRequest) error {
 			zap.L().Info("大V或活跃用户分支事务执行完成")
 			//用户粉丝集合分支事务
 			wf.NewBranch().OnRollback(func(bb *dtmcli.BranchBarrier) error {
-				resAddUserFollowUserCountSet, err := client.UserClientDtm.AddUserFollowUserCountSetRevert(wf.Context, &request1.DouyinUserFollowCountSetRequest{
+				resAddUserFollowUserCountSet, err := grpc_client.UserClientDtm.AddUserFollowUserCountSetRevert(wf.Context, &request1.DouyinUserFollowCountSetRequest{
 					UserId: req.LoginUserId,
 				})
 				if err != nil {
@@ -173,7 +173,7 @@ func FollowUserDtm(req *request.DouyinRelationActionRequest) error {
 			}
 			if res.IsActiver == false && res.IsInfluencer == false {
 				if userFollowCount == 9 {
-					resAddUserFollowUserCountSet, err := client.UserClientDtm.AddUserFollowUserCountSet(wf.Context, &request1.DouyinUserFollowCountSetRequest{
+					resAddUserFollowUserCountSet, err := grpc_client.UserClientDtm.AddUserFollowUserCountSet(wf.Context, &request1.DouyinUserFollowCountSetRequest{
 						UserId: req.LoginUserId,
 					})
 					if err != nil {
@@ -191,7 +191,7 @@ func FollowUserDtm(req *request.DouyinRelationActionRequest) error {
 			zap.L().Info("用户粉丝集合分支事务执行完成")
 			//用户关注者集合分支事务
 			wf.NewBranch().OnRollback(func(bb *dtmcli.BranchBarrier) error {
-				resAddUserFollowerUserCountSet, err := client.UserClientDtm.AddUserFollowerUserCountSetRevert(wf.Context, &request1.DouyinUserFollowerCountSetRequest{
+				resAddUserFollowerUserCountSet, err := grpc_client.UserClientDtm.AddUserFollowerUserCountSetRevert(wf.Context, &request1.DouyinUserFollowerCountSetRequest{
 					UserId: req.ToUserId,
 				})
 				if err != nil {
@@ -210,7 +210,7 @@ func FollowUserDtm(req *request.DouyinRelationActionRequest) error {
 			if res1.IsActiver == false && res1.IsInfluencer == false {
 				println(userFollowerCount)
 				if userFollowerCount == 9 {
-					resAddUserFollowerUserCountSet, err := client.UserClientDtm.AddUserFollowerUserCountSet(wf.Context, &request1.DouyinUserFollowerCountSetRequest{
+					resAddUserFollowerUserCountSet, err := grpc_client.UserClientDtm.AddUserFollowerUserCountSet(wf.Context, &request1.DouyinUserFollowerCountSetRequest{
 						UserId: req.ToUserId,
 					})
 					if err != nil {
@@ -242,7 +242,7 @@ func FollowUserDtm(req *request.DouyinRelationActionRequest) error {
 						Topic: "followTopic1",
 						Body:  data,
 					}
-					sync, err := rocketmq.Producer1.SendSync(context.Background(), msg)
+					sync, err := producer.Producer1.SendSync(context.Background(), msg)
 					if err != nil {
 						zap.L().Error("生产者1消息发送失败", zap.Error(err))
 						return nil, status.Error(codes.Aborted, err.Error())
@@ -300,7 +300,7 @@ func FollowUserDtm(req *request.DouyinRelationActionRequest) error {
 						Topic: "followTopic3",
 						Body:  data,
 					}
-					sync, err := rocketmq.Producer3.SendSync(context.Background(), msg)
+					sync, err := producer.Producer3.SendSync(context.Background(), msg)
 					if err != nil {
 						zap.L().Error("生产者3消息发送失败", zap.Error(err))
 						return nil, status.Error(codes.Aborted, err.Error())
@@ -326,7 +326,7 @@ func FollowUserDtm(req *request.DouyinRelationActionRequest) error {
 		return nil
 	}
 	//判断当前登录用户是否为大V或活跃用户
-	res, err := client.UserClient.UserIsInfluencerActiver(context.Background(), &request1.DouyinUserIsInfluencerActiverRequest{
+	res, err := grpc_client.UserClient.UserIsInfluencerActiver(context.Background(), &request1.DouyinUserIsInfluencerActiverRequest{
 		UserId: req.LoginUserId,
 	})
 	if err != nil {
@@ -340,7 +340,7 @@ func FollowUserDtm(req *request.DouyinRelationActionRequest) error {
 		}
 	}
 	//判断关注用户是否为大V或活跃用户
-	res3, err := client.UserClient.UserIsInfluencerActiver(context.Background(), &request1.DouyinUserIsInfluencerActiverRequest{
+	res3, err := grpc_client.UserClient.UserIsInfluencerActiver(context.Background(), &request1.DouyinUserIsInfluencerActiverRequest{
 		UserId: req.ToUserId,
 	})
 	if err != nil {
@@ -359,7 +359,7 @@ func FollowUserDtm(req *request.DouyinRelationActionRequest) error {
 		wf.NewBranch().OnRollback(func(bb *dtmcli.BranchBarrier) error {
 			if res.IsInfluencer == true || res.IsActiver == true {
 				//删除redis对应部分
-				res1, err := client.UserClientDtm.PushVActiveFollowerUserinfo(wf.Context, &request1.DouyinVActiveFollowFollowerUserinfoRequest{
+				res1, err := grpc_client.UserClientDtm.PushVActiveFollowerUserinfo(wf.Context, &request1.DouyinVActiveFollowFollowerUserinfoRequest{
 					LoginUserId:      req.LoginUserId,
 					UserId:           req.ToUserId,
 					IsV:              res3.IsInfluencer,
@@ -384,7 +384,7 @@ func FollowUserDtm(req *request.DouyinRelationActionRequest) error {
 		})
 		if res.IsInfluencer == true || res.IsActiver == true {
 			//删除redis对应部分
-			res1, err := client.UserClientDtm.DeleteVActiveFollowerUserinfo(wf.Context, &request1.DouyinDeleteVActiveFollowFollowerUserinfoRequest{
+			res1, err := grpc_client.UserClientDtm.DeleteVActiveFollowerUserinfo(wf.Context, &request1.DouyinDeleteVActiveFollowFollowerUserinfoRequest{
 				LoginUserId:      req.LoginUserId,
 				UserId:           req.ToUserId,
 				IsV:              res3.IsInfluencer,
@@ -422,7 +422,7 @@ func FollowUserDtm(req *request.DouyinRelationActionRequest) error {
 					Topic: "followTopic2",
 					Body:  data,
 				}
-				sync, err := rocketmq.Producer2.SendSync(context.Background(), msg)
+				sync, err := producer.Producer2.SendSync(context.Background(), msg)
 				if err != nil {
 					zap.L().Error("生产者2消息发送失败", zap.Error(err))
 					return nil, status.Error(codes.Aborted, err.Error())
@@ -467,257 +467,9 @@ func FollowUserDtm(req *request.DouyinRelationActionRequest) error {
 	return nil
 }
 
-func FollowUser(req *request.DouyinRelationActionRequest) error {
-	if req.ActionType == 1 {
-		//判断当前登录用户是否为大V或活跃用户
-		res, err := client.UserClient.UserIsInfluencerActiver(context.Background(), &request1.DouyinUserIsInfluencerActiverRequest{
-			UserId: req.LoginUserId,
-		})
-		if err != nil {
-			if res == nil {
-				zap.L().Error(errorConnectToGRPCServer, zap.Error(err))
-				return err
-			}
-			if res.Code == 2 {
-				zap.L().Error(errorExeVActiveSet, zap.Error(err))
-				return err
-			}
-		}
-		//判断关注用户是否为大V或活跃用户
-		res1, err := client.UserClient.UserIsInfluencerActiver(context.Background(), &request1.DouyinUserIsInfluencerActiverRequest{
-			UserId: req.ToUserId,
-		})
-		if err != nil {
-			if res1 == nil {
-				zap.L().Error(errorConnectToGRPCServer, zap.Error(err))
-				return err
-			}
-			if res1.Code == 2 {
-				zap.L().Error(errorExeVActiveSet, zap.Error(err))
-				return err
-			}
-		}
-		if res.IsInfluencer == true || res.IsActiver == true {
-			res1, err := client.UserClient.PushVActiveFollowerUserinfo(context.Background(), &request1.DouyinVActiveFollowFollowerUserinfoRequest{
-				LoginUserId:      req.LoginUserId,
-				UserId:           req.ToUserId,
-				IsV:              res1.IsInfluencer,
-				IsActive:         res1.IsActiver,
-				LoginIsV:         res.IsInfluencer,
-				LoginIsActive:    res.IsActiver,
-				IsFollowFollower: 1,
-			})
-			if err != nil {
-				if res1 == nil {
-					zap.L().Error(errorConnectToGRPCServer, zap.Error(err))
-					return err
-				}
-				if res1.Code == 2 {
-					zap.L().Error(errorPushVActiveFollowerUserinfo, zap.Error(err))
-					return err
-				}
-			}
-		}
-		if res1.IsInfluencer == true || res1.IsActiver == true {
-			//走消息队列
-			var producerMessage1 = ProducerMessage1{
-				LoginUserId:   req.LoginUserId,
-				UserId:        req.ToUserId,
-				IsV:           res1.IsInfluencer,
-				IsActive:      res1.IsActiver,
-				LoginIsV:      res.IsInfluencer,
-				LoginIsActive: res.IsActiver,
-			}
-			data, _ := json.Marshal(producerMessage1)
-			msg := &primitive.Message{
-				Topic: "followTopic1",
-				Body:  data,
-			}
-			sync, err := rocketmq.Producer1.SendSync(context.Background(), msg)
-			if err != nil {
-				zap.L().Error("生产者1消息发送失败", zap.Error(err))
-				return err
-			}
-			zap.L().Info("生产者1消息发送成功")
-			fmt.Printf("生产者1发送的消息：%v\n", sync.String())
-			return nil
-		}
-		//关注关系写入mysql关注表
-		var f = model.Follow{
-			FollowID:   req.ToUserId,
-			FollowerID: req.LoginUserId,
-		}
-		if err := mysql.CreateFollow(&f); err != nil {
-			zap.L().Error(errorCreateFollow, zap.Error(err))
-			return err
-		}
-		//redis用户关注数和粉丝数加一
-		userFollowCount, userFollowerCount, err := redis.AddUserFollowFollowerCount(req.LoginUserId, req.ToUserId)
-		if err != nil {
-			zap.L().Error(errorAddUserFollowFollowerCount, zap.Error(err))
-			return err
-		}
-		if userFollowerCount == 20 {
-			fs1 := make([]model.Follow, 0)
-			fs2 := make([]model.Follow, 0)
-			if err = mysql.GetUserFollowList(&fs1, req.ToUserId); err != nil {
-				zap.L().Error(errorGetUserFollowList, zap.Error(err))
-				return err
-			}
-			if err = mysql.GetUserFollowerList(&fs2, req.ToUserId); err != nil {
-				zap.L().Error(errorGetUserFollowList, zap.Error(err))
-				return err
-			}
-			var followIdList []int64
-			for i := 0; i < len(fs1); i++ {
-				followIdList = append(followIdList, fs1[i].FollowID)
-			}
-			var followerIdList []int64
-			for i := 0; i < len(fs2); i++ {
-				followerIdList = append(followerIdList, fs2[i].FollowerID)
-			}
-			//走消息队列
-			var producerMessage3 = ProducerMessage3{
-				UserId:         req.ToUserId,
-				FollowIdList:   followIdList,
-				FollowerIdList: followerIdList,
-			}
-			data, _ := json.Marshal(producerMessage3)
-			msg := &primitive.Message{
-				Topic: "followTopic3",
-				Body:  data,
-			}
-			sync, err := rocketmq.Producer3.SendSync(context.Background(), msg)
-			if err != nil {
-				zap.L().Error("生产者3消息发送失败", zap.Error(err))
-				return err
-			}
-			zap.L().Info("生产者3消息发送成功")
-			fmt.Printf("生产者3发送的消息：%v\n", sync.String())
-			return nil
-		}
-		if userFollowCount == 10 {
-			resAddUserFollowUserCountSet, err := client.UserClient.AddUserFollowUserCountSet(context.Background(), &request1.DouyinUserFollowCountSetRequest{
-				UserId: req.LoginUserId,
-			})
-			if err != nil {
-				if resAddUserFollowUserCountSet == nil {
-					zap.L().Error(errorConnectToGRPCServer, zap.Error(err))
-					return err
-				}
-				if resAddUserFollowUserCountSet.Code == 2 {
-					zap.L().Error(errorAddUserFollowUserCountSet, zap.Error(err))
-					return err
-				}
-			}
-		}
-		if userFollowerCount == 10 {
-			resAddUserFollowerUserCountSet, err := client.UserClient.AddUserFollowerUserCountSet(context.Background(), &request1.DouyinUserFollowerCountSetRequest{
-				UserId: req.ToUserId,
-			})
-			if err != nil {
-				if resAddUserFollowerUserCountSet == nil {
-					zap.L().Error(errorConnectToGRPCServer, zap.Error(err))
-					return err
-				}
-				if resAddUserFollowerUserCountSet.Code == 2 {
-					zap.L().Error(errorAddUserFollowerUserCountSet, zap.Error(err))
-					return err
-				}
-			}
-		}
-		return nil
-	}
-	//判断当前登录用户是否为大V或活跃用户
-	res, err := client.UserClient.UserIsInfluencerActiver(context.Background(), &request1.DouyinUserIsInfluencerActiverRequest{
-		UserId: req.LoginUserId,
-	})
-	if err != nil {
-		if res == nil {
-			zap.L().Error(errorConnectToGRPCServer, zap.Error(err))
-			return err
-		}
-		if res.Code == 2 {
-			zap.L().Error(errorExeVActiveSet, zap.Error(err))
-			return err
-		}
-	}
-	//判断关注用户是否为大V或活跃用户
-	res3, err := client.UserClient.UserIsInfluencerActiver(context.Background(), &request1.DouyinUserIsInfluencerActiverRequest{
-		UserId: req.ToUserId,
-	})
-	if err != nil {
-		if res3 == nil {
-			zap.L().Error(errorConnectToGRPCServer, zap.Error(err))
-			return err
-		}
-		if res3.Code == 2 {
-			zap.L().Error(errorExeVActiveSet, zap.Error(err))
-			return err
-		}
-	}
-	if res.IsInfluencer == true || res.IsActiver == true {
-		//删除redis对应部分
-		res1, err := client.UserClient.DeleteVActiveFollowerUserinfo(context.Background(), &request1.DouyinDeleteVActiveFollowFollowerUserinfoRequest{
-			LoginUserId:      req.LoginUserId,
-			UserId:           req.ToUserId,
-			IsV:              res3.IsInfluencer,
-			IsActive:         res3.IsActiver,
-			LoginIsV:         res.IsInfluencer,
-			LoginIsActive:    res.IsActiver,
-			IsFollowFollower: 1,
-		})
-		if err != nil {
-			if res1 == nil {
-				zap.L().Error(errorConnectToGRPCServer, zap.Error(err))
-				return err
-			}
-			if res1.Code == 2 {
-				zap.L().Error(errorDeleteVActiveFollowerUserinfo, zap.Error(err))
-				return err
-			}
-		}
-	}
-	if res3.IsInfluencer == true || res3.IsActiver == true {
-		//走消息队列
-		var producerMessage2 = ProducerMessage2{
-			LoginUserId:   req.LoginUserId,
-			UserId:        req.ToUserId,
-			IsV:           res3.IsInfluencer,
-			IsActive:      res3.IsActiver,
-			LoginIsV:      res.IsInfluencer,
-			LoginIsActive: res.IsActiver,
-		}
-		data, _ := json.Marshal(producerMessage2)
-		msg := &primitive.Message{
-			Topic: "followTopic2",
-			Body:  data,
-		}
-		sync, err := rocketmq.Producer2.SendSync(context.Background(), msg)
-		if err != nil {
-			zap.L().Error("生产者2消息发送失败", zap.Error(err))
-			return err
-		}
-		zap.L().Info("生产者2消息发送成功")
-		fmt.Printf("生产者2发送的消息：%v\n", sync.String())
-		return nil
-	}
-	//关注关系从mysql关注表删除
-	if err := mysql.DeleteFollow(req.LoginUserId, req.ToUserId); err != nil {
-		zap.L().Error(errorDeleteFollow, zap.Error(err))
-		return err
-	}
-	//redis用户关注数和粉丝数减一
-	if err := redis.SubUserFollowFollowerCount(req.LoginUserId, req.ToUserId); err != nil {
-		zap.L().Error(errorSubUserFollowFollowerCount, zap.Error(err))
-		return err
-	}
-	return nil
-}
-
 func GetFollowList(req *request.DouyinRelationFollowListRequest) ([]*response.User, error) {
 	//判断用户是否为大V或活跃用户
-	res, err := client.UserClient.UserIsInfluencerActiver(context.Background(), &request1.DouyinUserIsInfluencerActiverRequest{
+	res, err := grpc_client.UserClient.UserIsInfluencerActiver(context.Background(), &request1.DouyinUserIsInfluencerActiverRequest{
 		UserId: req.UserId,
 	})
 	if err != nil {
@@ -732,7 +484,7 @@ func GetFollowList(req *request.DouyinRelationFollowListRequest) ([]*response.Us
 	}
 	if res.IsInfluencer == true || res.IsActiver == true {
 		//根据判断条件选择是从redis还是mysql读用户信息
-		res1, err := client.UserClient.GetVActiveFollowerUserinfo(context.Background(), &request1.DouyinGetVActiveFollowFollowerUserinfoRequest{
+		res1, err := grpc_client.UserClient.GetVActiveFollowerUserinfo(context.Background(), &request1.DouyinGetVActiveFollowFollowerUserinfoRequest{
 			LoginUserId:      req.LoginUserId,
 			UserId:           req.UserId,
 			IsV:              res.IsInfluencer,
@@ -764,7 +516,7 @@ func GetFollowList(req *request.DouyinRelationFollowListRequest) ([]*response.Us
 	for i := 0; i < len(fs); i++ {
 		idList = append(idList, fs[i].FollowID)
 	}
-	res2, err := client.UserClient.GetUserInfoList(context.Background(), &request1.DouyinUserListRequest{
+	res2, err := grpc_client.UserClient.GetUserInfoList(context.Background(), &request1.DouyinUserListRequest{
 		UserId:      idList,
 		LoginUserId: req.LoginUserId,
 	})
@@ -783,7 +535,7 @@ func GetFollowList(req *request.DouyinRelationFollowListRequest) ([]*response.Us
 
 func GetFollowerList(req *request.DouyinRelationFollowerListRequest) ([]*response.User, error) {
 	//判断用户是否为大V或活跃用户
-	res, err := client.UserClient.UserIsInfluencerActiver(context.Background(), &request1.DouyinUserIsInfluencerActiverRequest{
+	res, err := grpc_client.UserClient.UserIsInfluencerActiver(context.Background(), &request1.DouyinUserIsInfluencerActiverRequest{
 		UserId: req.UserId,
 	})
 	if err != nil {
@@ -798,7 +550,7 @@ func GetFollowerList(req *request.DouyinRelationFollowerListRequest) ([]*respons
 	}
 	if res.IsInfluencer == true || res.IsActiver == true {
 		//根据判断条件选择是从redis还是mysql读用户信息
-		res1, err := client.UserClient.GetVActiveFollowerUserinfo(context.Background(), &request1.DouyinGetVActiveFollowFollowerUserinfoRequest{
+		res1, err := grpc_client.UserClient.GetVActiveFollowerUserinfo(context.Background(), &request1.DouyinGetVActiveFollowFollowerUserinfoRequest{
 			LoginUserId:      req.LoginUserId,
 			UserId:           req.UserId,
 			IsV:              res.IsInfluencer,
@@ -830,7 +582,7 @@ func GetFollowerList(req *request.DouyinRelationFollowerListRequest) ([]*respons
 	for i := 0; i < len(fs); i++ {
 		idList = append(idList, fs[i].FollowerID)
 	}
-	res2, err := client.UserClient.GetUserInfoList(context.Background(), &request1.DouyinUserListRequest{
+	res2, err := grpc_client.UserClient.GetUserInfoList(context.Background(), &request1.DouyinUserListRequest{
 		UserId:      idList,
 		LoginUserId: req.LoginUserId,
 	})
@@ -849,7 +601,7 @@ func GetFollowerList(req *request.DouyinRelationFollowerListRequest) ([]*respons
 
 func GetFriendList(req *request.DouyinRelationFriendListRequest) ([]*response1.FriendUser, error) {
 	//判断用户是否为大V或活跃用户
-	res, err := client.UserClient.UserIsInfluencerActiver(context.Background(), &request1.DouyinUserIsInfluencerActiverRequest{
+	res, err := grpc_client.UserClient.UserIsInfluencerActiver(context.Background(), &request1.DouyinUserIsInfluencerActiverRequest{
 		UserId: req.UserId,
 	})
 	if err != nil {
@@ -864,7 +616,7 @@ func GetFriendList(req *request.DouyinRelationFriendListRequest) ([]*response1.F
 	}
 	if res.IsInfluencer == true || res.IsActiver == true {
 		//根据判断条件选择是从redis还是mysql读用户信息
-		res1, err := client.UserClient.GetVActiveFollowerUserinfo(context.Background(), &request1.DouyinGetVActiveFollowFollowerUserinfoRequest{
+		res1, err := grpc_client.UserClient.GetVActiveFollowerUserinfo(context.Background(), &request1.DouyinGetVActiveFollowFollowerUserinfoRequest{
 			LoginUserId:      req.LoginUserId,
 			UserId:           req.UserId,
 			IsV:              res.IsInfluencer,
@@ -894,7 +646,7 @@ func GetFriendList(req *request.DouyinRelationFriendListRequest) ([]*response1.F
 			if len(friendIdList) == 0 {
 				return nil, nil
 			}
-			res2, err := client.MessageClient.GetUserFriendMessage(context.Background(), &request2.DouyinGetUserFriendMessageRequest{
+			res2, err := grpc_client.MessageClient.GetUserFriendMessage(context.Background(), &request2.DouyinGetUserFriendMessageRequest{
 				LoginUserId: req.LoginUserId,
 				ToUserId:    friendIdList,
 			})
@@ -955,7 +707,7 @@ func GetFriendList(req *request.DouyinRelationFriendListRequest) ([]*response1.F
 	if len(friendIdList) == 0 {
 		return nil, nil
 	}
-	res2, err := client.UserClient.GetUserInfoList(context.Background(), &request1.DouyinUserListRequest{
+	res2, err := grpc_client.UserClient.GetUserInfoList(context.Background(), &request1.DouyinUserListRequest{
 		UserId:      friendIdList,
 		LoginUserId: req.LoginUserId,
 	})
@@ -975,7 +727,7 @@ func GetFriendList(req *request.DouyinRelationFriendListRequest) ([]*response1.F
 		for i := 0; i < len(res2.User); i++ {
 			friendIdListF = append(friendIdListF, res2.User[i].Id)
 		}
-		res3, err := client.MessageClient.GetUserFriendMessage(context.Background(), &request2.DouyinGetUserFriendMessageRequest{
+		res3, err := grpc_client.MessageClient.GetUserFriendMessage(context.Background(), &request2.DouyinGetUserFriendMessageRequest{
 			LoginUserId: req.LoginUserId,
 			ToUserId:    friendIdListF,
 		})

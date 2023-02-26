@@ -1,14 +1,14 @@
 package main
 
 import (
-	"douyin/service/comment/client"
-	"douyin/service/comment/config"
 	"douyin/service/comment/dao/mysql"
 	"douyin/service/comment/dao/redis"
-	log1 "douyin/service/comment/log"
-	"douyin/service/comment/pkg/consul"
-	"douyin/service/comment/pkg/snowflake"
-	"douyin/service/comment/server"
+	"douyin/service/comment/initialize/config"
+	consul2 "douyin/service/comment/initialize/consul"
+	"douyin/service/comment/initialize/grpc_client"
+	log1 "douyin/service/comment/initialize/log"
+	"douyin/service/comment/initialize/server"
+	"douyin/service/comment/initialize/snowflake"
 	"fmt"
 	"go.uber.org/zap"
 	"log"
@@ -31,7 +31,7 @@ func main() {
 	defer zap.L().Sync()
 	zap.L().Debug("logger init success...")
 	//3.初始化consul连接
-	if err := consul.Init(fmt.Sprintf("%s:%d", config.Config.ConsulServer.Ip, config.Config.ConsulServer.Port)); err != nil {
+	if err := consul2.Init(fmt.Sprintf("%s:%d", config.Config.ConsulServer.Ip, config.Config.ConsulServer.Port)); err != nil {
 		zap.L().Error("init consul connection failed...", zap.Error(err))
 		log.Fatal("init consul connection failed...")
 	}
@@ -55,17 +55,17 @@ func main() {
 	}
 	zap.L().Debug("snowflake generate id success...")
 	//7.向consul注册服务
-	if err := consul.RegisterService(); err != nil {
+	if err := consul2.RegisterService(); err != nil {
 		zap.L().Error("register service to consul failed...", zap.Error(err))
 		log.Fatal("register service to consul failed...")
 	}
 	zap.L().Debug("register service to consul success...")
 	//8.启动grpc客户端
-	if err := client.InitUser(); err != nil {
+	if err := grpc_client.InitUser(); err != nil {
 		zap.L().Error("init user rpc client failed...", zap.Error(err))
 		log.Fatal("init user rpc client failed...")
 	}
-	if err := client.InitVideo(); err != nil {
+	if err := grpc_client.InitVideo(); err != nil {
 		zap.L().Error("init video rpc client failed...", zap.Error(err))
 		log.Fatal("init video rpc client failed...")
 	}

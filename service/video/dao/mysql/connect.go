@@ -1,7 +1,7 @@
 package mysql
 
 import (
-	"douyin/service/video/config"
+	"douyin/service/video/initialize/config"
 	"fmt"
 	"go.uber.org/zap"
 	"gorm.io/driver/mysql"

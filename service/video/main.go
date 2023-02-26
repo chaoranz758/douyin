@@ -1,14 +1,14 @@
 package main
 
 import (
-	"douyin/service/video/client"
-	"douyin/service/video/config"
 	"douyin/service/video/dao/mysql"
 	"douyin/service/video/dao/redis"
-	log1 "douyin/service/video/log"
-	"douyin/service/video/pkg/consul"
-	"douyin/service/video/pkg/snowflake"
-	"douyin/service/video/server"
+	"douyin/service/video/initialize/config"
+	consul2 "douyin/service/video/initialize/consul"
+	"douyin/service/video/initialize/grpc_client"
+	log1 "douyin/service/video/initialize/log"
+	"douyin/service/video/initialize/server"
+	"douyin/service/video/initialize/snowflake"
 	"fmt"
 	"go.uber.org/zap"
 	"log"
@@ -31,7 +31,7 @@ func main() {
 	defer zap.L().Sync()
 	zap.L().Debug("logger init success...")
 	//3.初始化consul连接
-	if err := consul.Init(fmt.Sprintf("%s:%d", config.Config.ConsulServer.Ip, config.Config.ConsulServer.Port)); err != nil {
+	if err := consul2.Init(fmt.Sprintf("%s:%d", config.Config.ConsulServer.Ip, config.Config.ConsulServer.Port)); err != nil {
 		zap.L().Error("init consul connection failed...", zap.Error(err))
 		log.Fatal("init consul connection failed...")
 	}
@@ -55,25 +55,25 @@ func main() {
 	}
 	zap.L().Debug("snowflake generate id success...")
 	//7.向consul注册服务
-	if err := consul.RegisterService(); err != nil {
+	if err := consul2.RegisterService(); err != nil {
 		zap.L().Error("register service to consul failed...", zap.Error(err))
 		log.Fatal("register service to consul failed...")
 	}
 	zap.L().Debug("register service to consul success...")
 	//8.启动grpc客户端
-	if err := client.InitFavorite(); err != nil {
+	if err := grpc_client.InitFavorite(); err != nil {
 		zap.L().Error("init favorite rpc client failed...", zap.Error(err))
 		log.Fatal("init favorite rpc client failed...")
 	}
-	if err := client.InitComment(); err != nil {
+	if err := grpc_client.InitComment(); err != nil {
 		zap.L().Error("init comment rpc client failed...", zap.Error(err))
 		log.Fatal("init comment rpc client failed...")
 	}
-	if err := client.InitUser(); err != nil {
+	if err := grpc_client.InitUser(); err != nil {
 		zap.L().Error("init user rpc client failed...", zap.Error(err))
 		log.Fatal("init user rpc client failed...")
 	}
-	if err := client.InitUserDtm(); err != nil {
+	if err := grpc_client.InitUserDtm(); err != nil {
 		zap.L().Error("init user dtm rpc client failed...", zap.Error(err))
 		log.Fatal("init user dtm rpc client failed...")
 	}
