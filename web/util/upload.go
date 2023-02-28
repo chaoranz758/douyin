@@ -13,6 +13,8 @@ const (
 	errorOpenFile          = "open file"
 )
 
+const baseUrl = "https://simpledouyin.oss-cn-qingdao.aliyuncs.com/"
+
 func Upload(videoURLLocal, videoName, imageName string) error {
 	videoName1 := fmt.Sprintf("videos/%s.mp4", videoName)
 	videoData1, err := os.Open(videoURLLocal)
@@ -25,7 +27,7 @@ func Upload(videoURLLocal, videoName, imageName string) error {
 		return err
 	}
 	imageName1 := fmt.Sprintf("images/%s.jpg", imageName)
-	videoURL := "https://simpledouyin.oss-cn-qingdao.aliyuncs.com/" + videoName1
+	videoURL := baseUrl + videoName1
 	imageData1, err := GetSnapshot(videoURL, 1)
 	if err != nil {
 		zap.L().Error(errorGetSnapshot, zap.Error(err))

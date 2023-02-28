@@ -28,6 +28,9 @@ type config1 struct {
 	ConsulRegister    `json:"consulRegister"`
 	ConsulCheckHealth `json:"consulCheckHealth"`
 	RequestGRPCServer `json:"requestGRPCServer"`
+	Rocketmq          `json:"rocketmq"`
+	Jwt               `json:"jwt"`
+	Oss               `json:"oss"`
 }
 
 type DouYinWeb struct {
@@ -84,6 +87,21 @@ type RequestGRPCServer struct {
 	MessageService struct {
 		Name string `json:"name"`
 	} `json:"messageService"`
+}
+
+type Rocketmq struct {
+	Address string `json:"address"`
+}
+
+type Jwt struct {
+	Secret string `json:"secret"`
+}
+
+type Oss struct {
+	Endpoint        string `json:"endpoint"`
+	AccessKeyId     string `json:"accessKeyId"`
+	AccessKeySecret string `json:"accessKeySecret"`
+	BucketName      string `json:"bucketName"`
 }
 
 type Nacos struct {

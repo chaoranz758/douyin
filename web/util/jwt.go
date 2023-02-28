@@ -1,11 +1,16 @@
 package util
 
 import (
+	"douyin/web/initialize/config"
 	"errors"
 	"github.com/dgrijalva/jwt-go"
 )
 
-var mySecret = []byte("夏天夏天悄悄过去")
+const (
+	invalidToken = "invalid token"
+)
+
+var mySecret = []byte(config.Config.Jwt.Secret)
 
 //额外自定义使用两个字段
 
@@ -28,5 +33,5 @@ func ParseToken(tokenString string) (*MyClaims, error) {
 	if token.Valid { // 校验token
 		return mc, nil
 	}
-	return nil, errors.New("invalid token")
+	return nil, errors.New(invalidToken)
 }

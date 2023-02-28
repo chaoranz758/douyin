@@ -29,6 +29,21 @@ const (
 	errorDeleteFavoriteRelation       = "delete favorite relation failed"
 	errorAddUserFavoriteVideoCountSet = "add user favorite video count set failed"
 	errorGetFavoriteCount             = "get favorite count failed"
+	errorJsonUnmarshal                = "json unmarshal failed"
+	errorExecuteWorkflow              = "result of workflow.Execute is"
+)
+
+const (
+	successCostumer1 = "消费者1消息执行完毕"
+	successCostumer2 = "消费者2消息执行完毕"
+	successCostumer3 = "消费者3消息执行完毕"
+	successCostumer4 = "消费者4消息执行完毕"
+)
+
+const (
+	wfName1 = "workflow-favoriteVideoCustomer1"
+	wfName2 = "workflow-favoriteVideoCustomer2"
+	wfName3 = "workflow-favoriteVideoCustomer3"
 )
 
 type Producer1Message struct {
@@ -64,11 +79,11 @@ type Producer4Message struct {
 }
 
 func FavoriteCustomer1CallBack(ctx context.Context, msgs ...*primitive.MessageExt) (consumer.ConsumeResult, error) {
-	wfName := "workflow-favoriteVideoCustomer1" + shortuuid.New()
+	wfName := wfName1 + shortuuid.New()
 	err := workflow.Register(wfName, func(wf *workflow.Workflow, data []byte) error {
 		var producer1Message Producer1Message
 		if err := json.Unmarshal(msgs[0].Body, &producer1Message); err != nil {
-			zap.L().Error("json解析失败", zap.Error(err))
+			zap.L().Error(errorJsonUnmarshal, zap.Error(err))
 			return status.Error(codes.Aborted, err.Error())
 		}
 		wf.NewBranch().OnRollback(func(bb *dtmcli.BranchBarrier) error {
@@ -91,7 +106,7 @@ func FavoriteCustomer1CallBack(ctx context.Context, msgs ...*primitive.MessageEx
 					return err
 				}
 			}
-			zap.L().Info("分支事务回滚")
+			//zap.L().Info("分支事务回滚")
 			return nil
 		})
 		//读视频基本信息并将视频信息存入大V或活跃用户关注的基本视频信息redis
@@ -114,7 +129,7 @@ func FavoriteCustomer1CallBack(ctx context.Context, msgs ...*primitive.MessageEx
 				return err
 			}
 		}
-		zap.L().Info("分支事务执行完成")
+		//zap.L().Info("分支事务执行完成")
 		_, err = wf.NewBranch().Do(func(bb *dtmcli.BranchBarrier) ([]byte, error) {
 			//点赞关系写入Mysql点赞表
 			var f = model.Favorite{
@@ -136,7 +151,7 @@ func FavoriteCustomer1CallBack(ctx context.Context, msgs ...*primitive.MessageEx
 				}
 				return nil, status.Error(codes.Aborted, err.Error())
 			}
-			zap.L().Info("本地事务执行完成")
+			//zap.L().Info("本地事务执行完成")
 			return nil, nil
 		})
 		if err != nil {
@@ -148,19 +163,19 @@ func FavoriteCustomer1CallBack(ctx context.Context, msgs ...*primitive.MessageEx
 		return consumer.ConsumeRetryLater, err
 	}
 	if err = workflow.Execute(wfName, shortuuid.New(), nil); err != nil {
-		zap.L().Error("result of workflow.Execute is", zap.Error(err))
+		zap.L().Error(errorExecuteWorkflow, zap.Error(err))
 		return consumer.ConsumeRetryLater, err
 	}
-	zap.L().Info("消费者1消息执行完毕")
+	zap.L().Info(successCostumer1)
 	return consumer.ConsumeSuccess, nil
 }
 
 func FavoriteCustomer2CallBack(ctx context.Context, msgs ...*primitive.MessageExt) (consumer.ConsumeResult, error) {
-	wfName := "workflow-favoriteVideoCustomer2" + shortuuid.New()
+	wfName := wfName2 + shortuuid.New()
 	err := workflow.Register(wfName, func(wf *workflow.Workflow, data []byte) error {
 		var producer2Message Producer2Message
 		if err := json.Unmarshal(msgs[0].Body, &producer2Message); err != nil {
-			zap.L().Error("json解析失败", zap.Error(err))
+			zap.L().Error(errorJsonUnmarshal, zap.Error(err))
 			return status.Error(codes.Aborted, err.Error())
 		}
 		wf.NewBranch().OnRollback(func(bb *dtmcli.BranchBarrier) error {
@@ -177,7 +192,7 @@ func FavoriteCustomer2CallBack(ctx context.Context, msgs ...*primitive.MessageEx
 					return err
 				}
 			}
-			zap.L().Info("调用用户服务分支事务回滚完成")
+			//zap.L().Info("调用用户服务分支事务回滚完成")
 			return nil
 		})
 		count, err := redis.GetFavoriteCount(producer2Message.LoginUserID)
@@ -200,7 +215,7 @@ func FavoriteCustomer2CallBack(ctx context.Context, msgs ...*primitive.MessageEx
 				}
 			}
 		}
-		zap.L().Info("调用用户服务分支事务执行完成")
+		//zap.L().Info("调用用户服务分支事务执行完成")
 		_, err = wf.NewBranch().Do(func(bb *dtmcli.BranchBarrier) ([]byte, error) {
 			//点赞关系写入Mysql点赞表
 			var f = model.Favorite{
@@ -222,7 +237,7 @@ func FavoriteCustomer2CallBack(ctx context.Context, msgs ...*primitive.MessageEx
 				}
 				return nil, status.Error(codes.Aborted, err.Error())
 			}
-			zap.L().Info("本地事务执行完成")
+			//zap.L().Info("本地事务执行完成")
 			return nil, nil
 		})
 		return err
@@ -232,19 +247,19 @@ func FavoriteCustomer2CallBack(ctx context.Context, msgs ...*primitive.MessageEx
 	}
 	//data, _ := json.Marshal(&msgs[0].Body)
 	if err = workflow.Execute(wfName, shortuuid.New(), nil); err != nil {
-		zap.L().Error("result of workflow.Execute is", zap.Error(err))
+		zap.L().Error(errorExecuteWorkflow, zap.Error(err))
 		return consumer.ConsumeRetryLater, err
 	}
-	zap.L().Info("消费者2消息执行完毕")
+	zap.L().Info(successCostumer2)
 	return consumer.ConsumeSuccess, nil
 }
 
 func FavoriteCustomer3CallBack(ctx context.Context, msgs ...*primitive.MessageExt) (consumer.ConsumeResult, error) {
-	wfName := "workflow-favoriteVideoCustomer3" + shortuuid.New()
+	wfName := wfName3 + shortuuid.New()
 	errWorkflow := workflow.Register(wfName, func(wf *workflow.Workflow, data []byte) error {
 		var producer3Message Producer3Message
 		if err := json.Unmarshal(msgs[0].Body, &producer3Message); err != nil {
-			zap.L().Error("json解析失败", zap.Error(err))
+			zap.L().Error(errorJsonUnmarshal, zap.Error(err))
 			return status.Error(codes.Aborted, err.Error())
 		}
 		wf.NewBranch().OnRollback(func(bb *dtmcli.BranchBarrier) error {
@@ -267,7 +282,7 @@ func FavoriteCustomer3CallBack(ctx context.Context, msgs ...*primitive.MessageEx
 					return err
 				}
 			}
-			zap.L().Info("分支事务回滚成功")
+			//zap.L().Info("分支事务回滚成功")
 			return nil
 		})
 		//将大V或活跃用户喜欢的基本视频信息从redis删除
@@ -287,7 +302,7 @@ func FavoriteCustomer3CallBack(ctx context.Context, msgs ...*primitive.MessageEx
 				return err
 			}
 		}
-		zap.L().Info("分支事务执行成功")
+		//zap.L().Info("分支事务执行成功")
 		_, err = wf.NewBranch().Do(func(bb *dtmcli.BranchBarrier) ([]byte, error) {
 			//点赞关系从Mysql点赞表删除
 			if err := mysql.DeleteFavoriteRelation(producer3Message.VideoID, producer3Message.LoginUserID); err != nil {
@@ -308,7 +323,7 @@ func FavoriteCustomer3CallBack(ctx context.Context, msgs ...*primitive.MessageEx
 				}
 				return nil, status.Error(codes.Aborted, err.Error())
 			}
-			zap.L().Info("本地事务执行完成")
+			//zap.L().Info("本地事务执行完成")
 			return nil, nil
 		})
 		return err
@@ -318,17 +333,17 @@ func FavoriteCustomer3CallBack(ctx context.Context, msgs ...*primitive.MessageEx
 	}
 	data, _ := json.Marshal(&msgs[0].Body)
 	if err := workflow.Execute(wfName, shortuuid.New(), data); err != nil {
-		zap.L().Error("result of workflow.Execute is", zap.Error(err))
+		zap.L().Error(errorExecuteWorkflow, zap.Error(err))
 		return consumer.ConsumeRetryLater, err
 	}
-	zap.L().Info("消费者3消息执行完毕")
+	zap.L().Info(successCostumer3)
 	return consumer.ConsumeSuccess, nil
 }
 
 func FavoriteCustomer4CallBack(ctx context.Context, msgs ...*primitive.MessageExt) (consumer.ConsumeResult, error) {
 	var producer4Message Producer4Message
 	if err := json.Unmarshal(msgs[0].Body, &producer4Message); err != nil {
-		zap.L().Error("json解析失败", zap.Error(err))
+		zap.L().Error(errorJsonUnmarshal, zap.Error(err))
 		return consumer.ConsumeRetryLater, err
 	}
 	//fmt.Printf("%v\n", producer4Message)
@@ -342,6 +357,6 @@ func FavoriteCustomer4CallBack(ctx context.Context, msgs ...*primitive.MessageEx
 		zap.L().Error(errorSubFavoriteCount, zap.Error(err))
 		return consumer.ConsumeRetryLater, err
 	}
-	zap.L().Info("消费者4消息执行完毕")
+	zap.L().Info(successCostumer4)
 	return consumer.ConsumeSuccess, nil
 }

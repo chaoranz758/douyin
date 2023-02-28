@@ -23,7 +23,6 @@ func AddUserFollowFollowerCount(loginUserId, userId int64) (int64, int64, error)
 	}
 	return intCmd1.Val(), intCmd2.Val(), nil
 }
-
 func SubUserFollowFollowerCount(loginUserId, userId int64) error {
 	loginUserId1 := strconv.FormatInt(loginUserId, 10)
 	userID1 := strconv.FormatInt(userId, 10)
@@ -118,7 +117,7 @@ func GetUserFollowFollowerCountList(userId []int64) ([]int64, []int64, error) {
 			r1, ok := cmd1.Val()[i].(string)
 			r11, _ := strconv.ParseInt(r1, 10, 64)
 			if !ok {
-				return nil, nil, errors.New("类型转换失败")
+				return nil, nil, errors.New(errorTypeTurnFailed)
 			}
 			result1 = append(result1, r11)
 		}
@@ -130,7 +129,7 @@ func GetUserFollowFollowerCountList(userId []int64) ([]int64, []int64, error) {
 			r2, ok := cmd2.Val()[i].(string)
 			r21, _ := strconv.ParseInt(r2, 10, 64)
 			if !ok {
-				return nil, nil, errors.New("类型转换失败")
+				return nil, nil, errors.New(errorTypeTurnFailed)
 			}
 			result2 = append(result2, r21)
 		}

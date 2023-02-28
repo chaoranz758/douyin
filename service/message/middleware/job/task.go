@@ -14,6 +14,10 @@ const (
 	errorCreateMessage      = "create message failed"
 )
 
+const (
+	success = "执行定时任务成功"
+)
+
 func PushActiveSet() error {
 	result, err := redis.PushActiveSet()
 	if err != nil {
@@ -21,7 +25,7 @@ func PushActiveSet() error {
 		return err
 	}
 	if len(result) == 0 {
-		zap.L().Info("执行了定时任务但没有要更新的活跃用户")
+		//zap.L().Info("执行了定时任务但没有要更新的活跃用户")
 		return nil
 	}
 	var userId []int64
@@ -53,6 +57,6 @@ func PushActiveSet() error {
 			return err
 		}
 	}
-	zap.L().Info("执行定时任务成功")
+	zap.L().Info(success)
 	return nil
 }

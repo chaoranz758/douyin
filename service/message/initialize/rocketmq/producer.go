@@ -1,8 +1,14 @@
 package rocketmq
 
 import (
+	"douyin/service/message/initialize/config"
 	"github.com/apache/rocketmq-client-go/v2"
 	"github.com/apache/rocketmq-client-go/v2/producer"
+)
+
+const (
+	producer1  = "messageProducer1"
+	retryCount = 5
 )
 
 var (
@@ -11,9 +17,9 @@ var (
 
 func InitProducer1() error {
 	p, err := rocketmq.NewProducer(
-		producer.WithNameServer([]string{"192.168.182.137:9876"}),
-		producer.WithGroupName("messageProducer1"),
-		producer.WithRetry(5),
+		producer.WithNameServer([]string{config.Config.Rocketmq.Address}),
+		producer.WithGroupName(producer1),
+		producer.WithRetry(retryCount),
 	)
 	if err != nil {
 		return err

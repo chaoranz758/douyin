@@ -2,20 +2,7 @@ package mysql
 
 import (
 	"douyin/service/comment/model"
-	"errors"
 	"go.uber.org/zap"
-)
-
-const (
-	errorCreateComment0     = "评论数据没有插入进comment表但没有报错"
-	errorCreateComment      = "create comment failed"
-	errorDeleteCommentInfo0 = "评论数据没有从comment表删除但没有报错"
-	errorDeleteCommentInfo  = "delete comment information failed"
-)
-
-var (
-	errorCreateComment0V     = errors.New("评论数据没有插入进comment表但没有报错")
-	errorDeleteCommentInfo0V = errors.New("评论数据没有从comment表删除但没有报错")
 )
 
 func PushCommentInfo(comment model.Commit) error {
@@ -51,11 +38,11 @@ func GetCommentInfo(cs *[]model.Commit, videoId int64) error {
 func RevertComment(commentId int64) error {
 	result := db.Where("commit_id = ?", commentId).Update("deleted_at", nil)
 	if result.RowsAffected == 0 {
-		zap.L().Error("revert comment failed not found", zap.Error(errors.New("revert comment failed not found")))
-		return errors.New("revert comment failed not found")
+		zap.L().Error(errorRevertCommentInfo0, zap.Error(errorRevertCommentInfo0V))
+		return errorRevertCommentInfo0V
 	}
 	if result.Error != nil {
-		zap.L().Error("revert comment failed", zap.Error(result.Error))
+		zap.L().Error(errorRevertCommentInfo, zap.Error(result.Error))
 		return result.Error
 	}
 	return nil

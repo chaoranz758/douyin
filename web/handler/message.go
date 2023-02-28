@@ -67,9 +67,6 @@ func GetMessageHandle(c *gin.Context) {
 		c.Abort()
 		return
 	}
-	//fmt.Println(getMessageRequest.PreMsgTime)
-	//fmt.Println(time.Now().UnixMilli())
-	//println(time.Now().UnixMilli() - getMessageRequest.PreMsgTime)
 	//token校验
 	mc, err := util.ParseToken(getMessageRequest.Token)
 	if err != nil {

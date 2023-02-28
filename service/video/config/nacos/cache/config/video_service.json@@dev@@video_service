@@ -50,6 +50,9 @@
     "interval": "10s",
     "deregisterCriticalServiceAfter": "1m"
   },
+  "dtm": {
+      "address": "127.0.0.1:36790"
+    },
   "requestGRPCServer": {
     "userService": {
       "name": "user_service"

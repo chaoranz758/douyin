@@ -9,12 +9,6 @@ import (
 	"go.uber.org/zap"
 )
 
-const (
-	errorSendMessage          = "send message failed"
-	errorGetMessage           = "get message failed"
-	errorGetUserFriendMessage = "get user friend message failed"
-)
-
 type Message struct {
 	api.UnimplementedMessageServer
 }

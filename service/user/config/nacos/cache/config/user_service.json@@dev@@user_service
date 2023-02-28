@@ -50,6 +50,10 @@
     "interval": "10s",
     "deregisterCriticalServiceAfter": "1m"
   },
+  "jwt": {
+      "secret": "",
+      "issuer": ""
+    },
   "requestGRPCServer": {
     "followService": {
       "name": "follow_service"

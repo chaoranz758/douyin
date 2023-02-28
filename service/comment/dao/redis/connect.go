@@ -26,7 +26,7 @@ func Init() (err error) {
 	defer cancel()
 	_, err = rdb.Ping(ctx).Result()
 	if err != nil {
-		zap.L().Error("connect redis failed", zap.Error(err))
+		zap.L().Error(errorConnectRedis, zap.Error(err))
 		return err
 	}
 	return nil

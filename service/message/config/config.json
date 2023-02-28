@@ -50,6 +50,9 @@
     "interval": "10s",
     "deregisterCriticalServiceAfter": "1m"
   },
+  "rocketmq": {
+    "address": "192.168.182.137:9876"
+  },
   "nacos": {
     "ip": "192.168.182.137",
     "port": 8848,

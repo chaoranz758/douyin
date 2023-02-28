@@ -23,6 +23,11 @@ const (
 	errorGetUserInfoListFailed      = "get user information list failed"
 	errorConnectToGRPCServer        = "connect to grpc server failed"
 	errorGetFollowFollowerIdList    = "get follow follower id list failed"
+	errorNoFollower                 = "当前用户没有关注者"
+)
+
+const (
+	success = "执行定时任务成功"
 )
 
 func PushActiveSetAndString() error {
@@ -33,7 +38,7 @@ func PushActiveSetAndString() error {
 		return err
 	}
 	if len(result) == 0 {
-		zap.L().Info("执行了定时任务但没有要更新的活跃用户")
+		//zap.L().Info("执行了定时任务但没有要更新的活跃用户")
 		return nil
 	}
 	var userId []int64
@@ -50,7 +55,7 @@ func PushActiveSetAndString() error {
 			}
 		}
 		if len(userId) == 0 {
-			zap.L().Info("执行了定时任务有活跃用户但该用户已经是大V了")
+			//zap.L().Info("执行了定时任务有活跃用户但该用户已经是大V了")
 			return nil
 		}
 		var userId1 []int64
@@ -65,7 +70,7 @@ func PushActiveSetAndString() error {
 			}
 		}
 		if len(userId1) == 0 {
-			zap.L().Info("执行了定时任务有活跃用户不是大V但该用户曾经是活跃用户已经写入过了")
+			//zap.L().Info("执行了定时任务有活跃用户不是大V但该用户曾经是活跃用户已经写入过了")
 			return nil
 		}
 		//从mysql读出这些用户id读出用户基本信息
@@ -101,7 +106,7 @@ func PushActiveSetAndString() error {
 			userIdList = append(userIdList, res.FollowList[i].UserId[j])
 		}
 		if len(userIdList) == 0 {
-			zap.L().Error("当前用户没有关注者")
+			zap.L().Error(errorNoFollower)
 		} else {
 			us := make([]model.User, 0, len(userIdList))
 			if err := mysql.GetUserInfoList(userIdList, &us); err != nil {
@@ -121,7 +126,7 @@ func PushActiveSetAndString() error {
 			userIdList = append(userIdList, res.FollowerList[i].UserId[j])
 		}
 		if len(userIdList) == 0 {
-			zap.L().Error("当前用户没有粉丝")
+			zap.L().Error(errorNoFollower)
 		} else {
 			us := make([]model.User, 0, len(userIdList))
 			if err := mysql.GetUserInfoList(userIdList, &us); err != nil {
@@ -149,6 +154,6 @@ func PushActiveSetAndString() error {
 			return err
 		}
 	}
-	zap.L().Info("执行定时任务成功")
+	zap.L().Info(success)
 	return nil
 }

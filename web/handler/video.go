@@ -18,6 +18,15 @@ const (
 	publishVideoSuccess    = "publish video success"
 	getPublishVideoSuccess = "get publish video success"
 	getVideoListSuccess    = "get video list success"
+	errorSendMessage       = "生产者消息发送失败"
+	successSendMessage     = "生产者消息发送成功"
+)
+
+const (
+	baseUrl       = "C:\\Users\\27155\\Desktop\\douyin_videos\\"
+	baseUrlALiYun = "https://simpledouyin.oss-cn-qingdao.aliyuncs.com/"
+	houzhui       = ".mp4"
+	topic         = "uploadVideoTopic2"
 )
 
 type ProducerMessage1 struct {
@@ -50,7 +59,7 @@ func PublishVideoHandle(c *gin.Context) {
 		return
 	}
 	file, _ := c.FormFile("data")
-	videoURLLocal := "C:\\Users\\27155\\Desktop\\douyin_videos\\" + publishVideoRequest.Title + ".mp4"
+	videoURLLocal := baseUrl + publishVideoRequest.Title + houzhui
 	if err = c.SaveUploadedFile(file, videoURLLocal); err != nil {
 		zap.L().Error(getMsg(CodeSaveFileFailed), zap.Error(err))
 		c.JSON(http.StatusOK, gin.H{
@@ -68,12 +77,12 @@ func PublishVideoHandle(c *gin.Context) {
 	}
 	data, _ := json.Marshal(producerMessage1)
 	msg := &primitive.Message{
-		Topic: "uploadVideoTopic2",
+		Topic: topic,
 		Body:  data,
 	}
-	sync, err := rocketmq.Producer1.SendSync(context.Background(), msg)
+	_, err = rocketmq.Producer1.SendSync(context.Background(), msg)
 	if err != nil {
-		zap.L().Error("生产者消息发送失败", zap.Error(err))
+		zap.L().Error(errorSendMessage, zap.Error(err))
 		zap.L().Error(getMsg(CodeProducerSendMessageFailed), zap.Error(err))
 		c.JSON(http.StatusOK, gin.H{
 			"status_code": CodeProducerSendMessageFailed,
@@ -82,12 +91,11 @@ func PublishVideoHandle(c *gin.Context) {
 		c.Abort()
 		return
 	}
-	zap.L().Info("生产者消息发送成功")
-	fmt.Printf("生产者发送的消息：%v\n", sync.String())
+	zap.L().Info(successSendMessage)
 	videoName1 := fmt.Sprintf("videos/%s.mp4", file.Filename)
-	videoURL := "https://simpledouyin.oss-cn-qingdao.aliyuncs.com/" + videoName1
+	videoURL := baseUrlALiYun + videoName1
 	imageName1 := fmt.Sprintf("images/%s.jpg", file.Filename)
-	imageURL := "https://simpledouyin.oss-cn-qingdao.aliyuncs.com/" + imageName1
+	imageURL := baseUrlALiYun + imageName1
 	//2.调用rpc
 	if err = service.PublishVideo(publishVideoRequest, mc.UserID, videoURL, imageURL); err != nil {
 		zap.L().Error(getMsg(CodeServerBusy), zap.Error(err))

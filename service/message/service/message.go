@@ -10,7 +10,6 @@ import (
 	"douyin/service/message/model"
 	"douyin/service/message/util"
 	"encoding/json"
-	"fmt"
 	"github.com/apache/rocketmq-client-go/v2/primitive"
 	"go.uber.org/zap"
 	"sort"
@@ -18,14 +17,7 @@ import (
 )
 
 const (
-	errorIsMessageActiveUser    = "judge is message active user failed"
-	errorCreateMessage          = "create message failed"
-	errorJsonUnmarshal          = "json unmarshal failed"
-	errorGetMessage             = "get message failed"
-	errorAddUserSendMessage     = "add user send message count failed"
-	errorAddUserGetMessage      = "add user get message count failed"
-	errorGetMessageLast         = "get message last failed"
-	errorJudgeGetMessageIsFirst = "judge get message is first failed"
+	topic1 = "messageTopic1"
 )
 
 type Messages []*response.Message
@@ -72,16 +64,15 @@ func SendMessage(req *request.DouyinMessageActionRequest) error {
 		}
 		data, _ := json.Marshal(producerMessage1)
 		msg := &primitive.Message{
-			Topic: "messageTopic1",
+			Topic: topic1,
 			Body:  data,
 		}
-		sync, err := rocketmq.Producer1.SendSync(context.Background(), msg)
+		_, err = rocketmq.Producer1.SendSync(context.Background(), msg)
 		if err != nil {
-			zap.L().Error("生产者1消息发送失败", zap.Error(err))
+			zap.L().Error(errorSendMessage1, zap.Error(err))
 			return err
 		}
-		zap.L().Info("生产者1消息发送成功")
-		fmt.Printf("生产者1发送的消息：%v\n", sync.String())
+		zap.L().Info(successSendMessage1)
 		return nil
 	}
 	//不是消息活跃用户
@@ -100,7 +91,7 @@ func SendMessage(req *request.DouyinMessageActionRequest) error {
 	if err := redis.AddUserSendMessage(req.LoginUserId); err != nil {
 		zap.L().Error(errorAddUserSendMessage, zap.Error(err))
 		if err := mysql.DeleteMessage(messageId); err != nil {
-			zap.L().Error("delete message failed", zap.Error(err))
+			zap.L().Error(errorDeleteMessage, zap.Error(err))
 			return err
 		}
 		return err
@@ -159,7 +150,6 @@ func GetMessage(req *request.DouyinMessageChatRequest) ([]*response.Message, err
 				}
 			}
 		}
-		//var rs []*response.Message
 		for i := 0; i < len(ps); i++ {
 			var r = response.Message{
 				Id:         ps[i].MessageId,
@@ -234,7 +224,6 @@ func GetMessage(req *request.DouyinMessageChatRequest) ([]*response.Message, err
 		sort.Sort(rs)
 		return rs, nil
 	}
-	//var rs []*response.Message
 	var (
 		rs Messages
 	)

@@ -4,7 +4,6 @@ import (
 	"douyin/web/model/request"
 	"douyin/web/service"
 	"douyin/web/util"
-	"fmt"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 )
@@ -23,7 +22,6 @@ func CommentVideoHandle(c *gin.Context) {
 		c.Abort()
 		return
 	}
-	fmt.Printf("%v\n", commentVideoRequest)
 	//token校验
 	mc, err := util.ParseToken(commentVideoRequest.Token)
 	if err != nil {

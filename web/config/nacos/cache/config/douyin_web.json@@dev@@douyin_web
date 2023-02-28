@@ -29,6 +29,18 @@
     "interval": "1m",
     "deregisterCriticalServiceAfter": "1m"
   },
+  "rocketmq": {
+      "address": "192.168.182.137:9876"
+    },
+  "jwt": {
+      "secret": ""
+    },
+  "Oss": {
+      "endpoint" : "",
+      "accessKeyId" : "",
+      "accessKeySecret" : "",
+      "bucketName" : ""
+    },
   "requestGRPCServer": {
     "userService": {
       "name": "user_service"

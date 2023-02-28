@@ -49,6 +49,18 @@
       "name": "message_service"
     }
   },
+  "rocketmq": {
+    "address": "192.168.182.137:9876"
+  },
+  "jwt": {
+    "secret": ""
+  },
+  "Oss": {
+    "endpoint" : "",
+    "accessKeyId" : "",
+    "accessKeySecret" : "",
+    "bucketName" : ""
+  },
   "nacos": {
     "ip": "192.168.182.137",
     "port": 8848,

@@ -4,14 +4,9 @@ import (
 	"context"
 	"douyin/service/comment/model"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"go.uber.org/zap"
 	"strconv"
-)
-
-const (
-	errorJsonMarshal = "json marshal failed"
 )
 
 func PushCommentInfo(comment model.Commit, authorId int64) error {
@@ -52,58 +47,6 @@ func GetCommentInfo(videoId, authorId int64) ([]string, error) {
 	keyPart1 := KeyVVideoComment + keyPart
 	key := getKey(keyPart1)
 	return rdb.HVals(context.Background(), key).Result()
-}
-
-func AddVideoCommentCount(videoId int64) error {
-	videoId1 := strconv.FormatInt(videoId, 10)
-	keyPart := KeyVideoCommentCount + videoId1
-	key := getKey(keyPart)
-	if err := rdb.Incr(context.Background(), key).Err(); err != nil {
-		return err
-	}
-	return nil
-}
-
-func SubVideoCommentCount(videoId int64) error {
-	videoId1 := strconv.FormatInt(videoId, 10)
-	keyPart := KeyVideoCommentCount + videoId1
-	key := getKey(keyPart)
-	if err := rdb.Decr(context.Background(), key).Err(); err != nil {
-		return err
-	}
-	return nil
-}
-
-func GetCommentCount(videoIdList []int64) ([]int64, error) {
-	var keys []string
-	for i := 0; i < len(videoIdList); i++ {
-		videoId1 := strconv.FormatInt(videoIdList[i], 10)
-		keyPart := KeyVideoCommentCount + videoId1
-		key := getKey(keyPart)
-		keys = append(keys, key)
-	}
-	result, err := rdb.MGet(context.Background(), keys...).Result()
-	if err != nil {
-		return nil, err
-	}
-	//if result[0] == nil && len(result) == 1 {
-	//	data := make([]int64, len(videoIdList), len(videoIdList))
-	//	return data, nil
-	//}
-	var counts []int64
-	for i := 0; i < len(result); i++ {
-		if result[i] == nil {
-			counts = append(counts, 0)
-		} else {
-			count, ok := result[i].(string)
-			count1, _ := strconv.ParseInt(count, 10, 64)
-			if !ok {
-				return nil, errors.New("类型转换失败")
-			}
-			counts = append(counts, count1)
-		}
-	}
-	return counts, nil
 }
 
 func PushVCommentBasicInfoInit(videoId, authorId int64, cs []model.Commit) error {

@@ -1,8 +1,17 @@
 package rocketmq
 
 import (
+	"douyin/service/favorite/initialize/config"
 	"github.com/apache/rocketmq-client-go/v2"
 	"github.com/apache/rocketmq-client-go/v2/producer"
+)
+
+const (
+	group1     = "favoriteProducer1"
+	group2     = "favoriteProducer2"
+	group3     = "favoriteProducer3"
+	group4     = "favoriteProducer4"
+	retryCount = 5
 )
 
 var (
@@ -14,9 +23,9 @@ var (
 
 func InitProducer1() error {
 	p, err := rocketmq.NewProducer(
-		producer.WithNameServer([]string{"192.168.182.137:9876"}),
-		producer.WithGroupName("favoriteProducer1"),
-		producer.WithRetry(5),
+		producer.WithNameServer([]string{config.Config.Rocketmq.Address}),
+		producer.WithGroupName(group1),
+		producer.WithRetry(retryCount),
 	)
 	if err != nil {
 		return err
@@ -31,9 +40,9 @@ func InitProducer1() error {
 
 func InitProducer2() error {
 	p, err := rocketmq.NewProducer(
-		producer.WithNameServer([]string{"192.168.182.137:9876"}),
-		producer.WithGroupName("favoriteProducer2"),
-		producer.WithRetry(5),
+		producer.WithNameServer([]string{config.Config.Rocketmq.Address}),
+		producer.WithGroupName(group2),
+		producer.WithRetry(retryCount),
 	)
 	if err != nil {
 		return err
@@ -48,9 +57,9 @@ func InitProducer2() error {
 
 func InitProducer3() error {
 	p, err := rocketmq.NewProducer(
-		producer.WithNameServer([]string{"192.168.182.137:9876"}),
-		producer.WithGroupName("favoriteProducer3"),
-		producer.WithRetry(5),
+		producer.WithNameServer([]string{config.Config.Rocketmq.Address}),
+		producer.WithGroupName(group3),
+		producer.WithRetry(retryCount),
 	)
 	if err != nil {
 		return err
@@ -65,9 +74,9 @@ func InitProducer3() error {
 
 func InitProducer4() error {
 	p, err := rocketmq.NewProducer(
-		producer.WithNameServer([]string{"192.168.182.137:9876"}),
-		producer.WithGroupName("favoriteProducer4"),
-		producer.WithRetry(5),
+		producer.WithNameServer([]string{config.Config.Rocketmq.Address}),
+		producer.WithGroupName(group4),
+		producer.WithRetry(retryCount),
 	)
 	if err != nil {
 		return err

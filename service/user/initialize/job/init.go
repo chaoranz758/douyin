@@ -8,13 +8,14 @@ import (
 
 const (
 	errorPushActiveSetAndString = "push v or active set and string"
+	spec                        = "@every 10m"
 )
 
 var c *cron.Cron
 
 func InitCron() error {
 	c = cron.New()
-	_, err := c.AddFunc("@every 10m", func() {
+	_, err := c.AddFunc(spec, func() {
 		if err := job.PushActiveSetAndString(); err != nil {
 			zap.L().Error(errorPushActiveSetAndString, zap.Error(err))
 		}

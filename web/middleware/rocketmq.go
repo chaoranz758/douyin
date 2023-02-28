@@ -10,7 +10,8 @@ import (
 )
 
 const (
-	errorUploadFile = "upload file failed"
+	errorUploadFile    = "upload file failed"
+	errorJsonUnmarshal = "json unmarshal failed"
 )
 
 type ProducerMessage1 struct {
@@ -22,7 +23,7 @@ type ProducerMessage1 struct {
 func UploadVideoCallBack(ctx context.Context, msgs ...*primitive.MessageExt) (consumer.ConsumeResult, error) {
 	var producer1Message ProducerMessage1
 	if err := json.Unmarshal(msgs[0].Body, &producer1Message); err != nil {
-		zap.L().Error("json解析失败", zap.Error(err))
+		zap.L().Error(errorJsonUnmarshal, zap.Error(err))
 		return consumer.ConsumeRetryLater, err
 	}
 	err := util.Upload(producer1Message.VideoURLLocal, producer1Message.VideoName, producer1Message.ImageName)

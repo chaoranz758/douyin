@@ -8,11 +8,13 @@ import (
 
 const errorPushActiveSet = "push active set failed"
 
+const spec = "@every 10m"
+
 var c *cron.Cron
 
 func InitCron() error {
 	c = cron.New()
-	_, err := c.AddFunc("@every 10m", func() {
+	_, err := c.AddFunc(spec, func() {
 		if err := job.PushActiveSet(); err != nil {
 			zap.L().Error(errorPushActiveSet, zap.Error(err))
 		}

@@ -8,7 +8,6 @@ service Comment {
   rpc CommentVideo(request.douyin_comment_action_request) returns (response.douyin_comment_action_response);//评论操作
   rpc GetCommentVideoList(request.douyin_comment_list_request) returns (response.douyin_comment_list_response);//视频评论列表
 
-  rpc PushVCommentBasicInfoInit(request.douyin_push_v_comment_basic_info_init_request) returns (response.douyin_push_v_comment_basic_info_init_response);
-
+  rpc PushVCommentBasicInfoInit(request.douyin_push_v_comment_basic_info_init_request) returns (response.douyin_push_v_comment_basic_info_init_response);//存大V评论的基本信息
   rpc GetCommentCount(request.douyin_comment_count_request) returns (response.douyin_comment_count_response);//批量获取视频评论数
 }

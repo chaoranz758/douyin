@@ -31,6 +31,7 @@ type config1 struct {
 	ConsulRegister    `json:"consulRegister"`
 	ConsulCheckHealth `json:"consulCheckHealth"`
 	RequestGRPCServer `json:"requestGRPCServer"`
+	Dtm               `json:"dtm"`
 }
 
 type DouYinService struct {
@@ -102,6 +103,10 @@ type RequestGRPCServer struct {
 	FavoriteService struct {
 		Name string `json:"name"`
 	} `json:"favoriteService"`
+}
+
+type Dtm struct {
+	Address string `json:"address"`
 }
 
 type Nacos struct {

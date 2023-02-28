@@ -4,7 +4,6 @@ import (
 	"context"
 	request3 "douyin/proto/comment/request"
 	"douyin/proto/favorite/request"
-	response1 "douyin/proto/favorite/response"
 	request1 "douyin/proto/user/request"
 	request2 "douyin/proto/video/request"
 	"douyin/proto/video/response"
@@ -14,8 +13,6 @@ import (
 	"douyin/service/favorite/initialize/rocketmq"
 	"douyin/service/favorite/model"
 	"encoding/json"
-	"errors"
-	"fmt"
 	"github.com/apache/rocketmq-client-go/v2/primitive"
 	"github.com/dtm-labs/dtmcli"
 	"github.com/dtm-labs/dtmgrpc/workflow"
@@ -26,25 +23,14 @@ import (
 )
 
 const (
-	errorConnectToGRPCServer          = "connect to grpc server failed"
-	errorExeVActiveSet                = "exe if request is V or active from redis set failed"
-	errorJudgeVideoAuthor             = "judge video author is v or active failed"
-	errorPushVActiveFavoriteVideo     = "push v or active favorite video information failed"
-	errorAddFavoriteCount             = "add favorite count failed"
-	errorFavoriteRelation             = "create favorite relation failed"
-	errorDeleteVActiveFavoriteVideo   = "delete v active favorite video information failed"
-	errorSubFavoriteCount             = "sub favorite count failed"
-	errorDeleteFavoriteRelation       = "delete favorite relation failed"
-	errorGetVActiveFavoriteVideo      = "get v or active favorite video information failed"
-	errorGetUserFavoriteID            = "get user favorite id failed"
-	errorGetVideoListInner            = "get video list inner failed"
-	MGetVideoFavoriteCount            = "get video favorite count failed"
-	errorGetUserFavoriteBool          = "get user favorite bool failed"
-	errorGetCommentCount              = "get comment count failed"
-	errorGetUserInfoList              = "get user information list failed"
-	errorAddUserFavoriteVideoCountSet = "add user favorite video count set failed"
-	errorGetUserFavoritedCount        = "get user favorited count failed"
-	errorGetFavoriteCount             = "get user favorite videos count failed"
+	wfName1 = "workflow-favoriteVideo"
+)
+
+const (
+	topic1 = "favoriteTopic1"
+	topic2 = "favoriteTopic2"
+	topic3 = "favoriteTopic3"
+	topic4 = "favoriteTopic4"
 )
 
 type Producer1Message struct {
@@ -130,11 +116,11 @@ func FavoriteVideoDtm(req *request.DouyinFavoriteActionRequest) error {
 				return err
 			}
 		}
-		wfName := "workflow-favoriteVideo" + shortuuid.New()
+		wfName := wfName1 + shortuuid.New()
 		err = workflow.Register(wfName, func(wf *workflow.Workflow, data []byte) error {
 			var req1 FavoriteVideoDtmMessage
 			if err := json.Unmarshal(data, &req1); err != nil {
-				zap.L().Error("json unmarshal failed", zap.Error(err))
+				zap.L().Error(errorJsonUnmarshal, zap.Error(err))
 				return status.New(codes.Aborted, err.Error()).Err()
 			}
 			//视频服务回滚分支
@@ -162,7 +148,7 @@ func FavoriteVideoDtm(req *request.DouyinFavoriteActionRequest) error {
 						}
 					}
 				}
-				zap.L().Info("点赞接口调用视频服务回滚")
+				//zap.L().Info("点赞接口调用视频服务回滚")
 				return nil
 			})
 			//视频服务分支
@@ -189,7 +175,7 @@ func FavoriteVideoDtm(req *request.DouyinFavoriteActionRequest) error {
 					}
 				}
 			}
-			zap.L().Info("点赞接口调用视频服务正向事务成功")
+			//zap.L().Info("点赞接口调用视频服务正向事务成功")
 			//用户服务回滚分支
 			wf.NewBranch().OnRollback(func(bb *dtmcli.BranchBarrier) error {
 				res5, err := grpc_client.UserClientDtm.AddUserFavoriteVideoCountSetRevert(wf.Context, &request1.DouyinUserVideoCountSetRequest{
@@ -205,7 +191,7 @@ func FavoriteVideoDtm(req *request.DouyinFavoriteActionRequest) error {
 						return err
 					}
 				}
-				zap.L().Info("点赞接口调用用户服务回滚")
+				//zap.L().Info("点赞接口调用用户服务回滚")
 				return nil
 			})
 			//用户服务
@@ -231,7 +217,7 @@ func FavoriteVideoDtm(req *request.DouyinFavoriteActionRequest) error {
 					}
 				}
 			}
-			zap.L().Info("点赞接口调用用户服务正向事务成功")
+			//zap.L().Info("点赞接口调用用户服务正向事务成功")
 			//本地事务
 			_, err = wf.NewBranch().Do(func(bb *dtmcli.BranchBarrier) ([]byte, error) {
 				//点赞视频的用户是大V或活跃用户
@@ -249,16 +235,15 @@ func FavoriteVideoDtm(req *request.DouyinFavoriteActionRequest) error {
 						}
 						data, _ := json.Marshal(producer1Message)
 						msg := &primitive.Message{
-							Topic: "favoriteTopic1",
+							Topic: topic1,
 							Body:  data,
 						}
-						sync, err := rocketmq.Producer1.SendSync(context.Background(), msg)
+						_, err = rocketmq.Producer1.SendSync(context.Background(), msg)
 						if err != nil {
-							zap.L().Error("生产者1消息发送失败", zap.Error(err))
+							zap.L().Error(errorSendMessage1, zap.Error(err))
 							return nil, status.Error(codes.Aborted, err.Error())
 						}
-						zap.L().Info("生产者1消息发送成功")
-						fmt.Printf("生产者1发送的消息：%v\n", sync.String())
+						zap.L().Info(successSendMessage1)
 						return nil, nil
 					}
 					//点赞关系写入Mysql点赞表
@@ -292,16 +277,15 @@ func FavoriteVideoDtm(req *request.DouyinFavoriteActionRequest) error {
 					}
 					data, _ := json.Marshal(producer2Message)
 					msg := &primitive.Message{
-						Topic: "favoriteTopic2",
+						Topic: topic2,
 						Body:  data,
 					}
-					sync, err := rocketmq.Producer2.SendSync(context.Background(), msg)
+					_, err = rocketmq.Producer2.SendSync(context.Background(), msg)
 					if err != nil {
-						zap.L().Error("生产者2消息发送失败", zap.Error(err))
+						zap.L().Error(errorSendMessage2, zap.Error(err))
 						return nil, status.Error(codes.Aborted, err.Error())
 					}
-					zap.L().Info("生产者2消息发送成功")
-					fmt.Printf("生产者2发送的消息：%v\n", sync.String())
+					zap.L().Info(successSendMessage2)
 					return nil, nil
 				}
 				//点赞关系写入Mysql点赞表
@@ -324,7 +308,7 @@ func FavoriteVideoDtm(req *request.DouyinFavoriteActionRequest) error {
 					}
 					return nil, status.Error(codes.Aborted, err.Error())
 				}
-				zap.L().Info("本地事务执行成功")
+				//zap.L().Info("本地事务执行成功")
 				return nil, nil
 			})
 			if err != nil {
@@ -343,10 +327,10 @@ func FavoriteVideoDtm(req *request.DouyinFavoriteActionRequest) error {
 		}
 		data, _ := json.Marshal(&req1)
 		if err = workflow.Execute(wfName, shortuuid.New(), data); err != nil {
-			zap.L().Error("result of workflow.Execute is", zap.Error(err))
+			zap.L().Error(errorExecuteWorkflow, zap.Error(err))
 			return err
 		}
-		zap.L().Info("视频点赞dtm事务执行完成")
+		//zap.L().Info("视频点赞dtm事务执行完成")
 		return nil
 	}
 	//判断点赞视频的用户是否为大V或活跃用户
@@ -377,11 +361,11 @@ func FavoriteVideoDtm(req *request.DouyinFavoriteActionRequest) error {
 			return err
 		}
 	}
-	wfName := "workflow-deleteFavoriteVideo" + shortuuid.New()
+	wfName := wfName1 + shortuuid.New()
 	err = workflow.Register(wfName, func(wf *workflow.Workflow, data []byte) error {
 		var req1 DeleteFavoriteVideoDtmMessage
 		if err := json.Unmarshal(data, &req1); err != nil {
-			zap.L().Error("json unmarshal failed", zap.Error(err))
+			zap.L().Error(errorJsonUnmarshal, zap.Error(err))
 			return status.New(codes.Aborted, err.Error()).Err()
 		}
 		//调用视频服务回滚
@@ -409,7 +393,7 @@ func FavoriteVideoDtm(req *request.DouyinFavoriteActionRequest) error {
 					}
 				}
 			}
-			zap.L().Info("调用视频服务回滚完成")
+			//zap.L().Info("调用视频服务回滚完成")
 			return nil
 		})
 		//调用视频服务
@@ -434,7 +418,7 @@ func FavoriteVideoDtm(req *request.DouyinFavoriteActionRequest) error {
 				}
 			}
 		}
-		zap.L().Info("调用视频服务完成")
+		//zap.L().Info("调用视频服务完成")
 		//本地事务
 		_, err = wf.NewBranch().Do(func(bb *dtmcli.BranchBarrier) ([]byte, error) {
 			if res.IsInfluencer == true || res.IsActiver == true {
@@ -451,16 +435,15 @@ func FavoriteVideoDtm(req *request.DouyinFavoriteActionRequest) error {
 					}
 					data, _ := json.Marshal(producer3Message)
 					msg := &primitive.Message{
-						Topic: "favoriteTopic3",
+						Topic: topic3,
 						Body:  data,
 					}
-					sync, err := rocketmq.Producer3.SendSync(context.Background(), msg)
+					_, err = rocketmq.Producer3.SendSync(context.Background(), msg)
 					if err != nil {
-						zap.L().Error("生产者3消息发送失败", zap.Error(err))
+						zap.L().Error(errorSendMessage3, zap.Error(err))
 						return nil, status.Error(codes.Aborted, err.Error())
 					}
-					zap.L().Info("生产者3消息发送成功")
-					fmt.Printf("生产者3发送的消息：%v\n", sync.String())
+					zap.L().Info(successSendMessage3)
 					return nil, nil
 				}
 				//点赞关系从Mysql点赞表删除
@@ -492,16 +475,15 @@ func FavoriteVideoDtm(req *request.DouyinFavoriteActionRequest) error {
 				}
 				data, _ := json.Marshal(producer4Message)
 				msg := &primitive.Message{
-					Topic: "favoriteTopic4",
+					Topic: topic4,
 					Body:  data,
 				}
-				sync, err := rocketmq.Producer4.SendSync(context.Background(), msg)
+				_, err = rocketmq.Producer4.SendSync(context.Background(), msg)
 				if err != nil {
-					zap.L().Error("生产者4消息发送失败", zap.Error(err))
+					zap.L().Error(errorSendMessage4, zap.Error(err))
 					return nil, status.Error(codes.Aborted, err.Error())
 				}
-				zap.L().Info("生产者4消息发送成功")
-				fmt.Printf("生产者4发送的消息：%v\n", sync.String())
+				zap.L().Info(successSendMessage4)
 				return nil, nil
 			}
 			//点赞关系从Mysql点赞表删除
@@ -523,7 +505,7 @@ func FavoriteVideoDtm(req *request.DouyinFavoriteActionRequest) error {
 				}
 				return nil, status.Error(codes.Aborted, err.Error())
 			}
-			zap.L().Info("本地事务执行完成")
+			//zap.L().Info("本地事务执行完成")
 			return nil, nil
 		})
 		return err
@@ -539,10 +521,10 @@ func FavoriteVideoDtm(req *request.DouyinFavoriteActionRequest) error {
 	}
 	data, _ := json.Marshal(&req1)
 	if err = workflow.Execute(wfName, shortuuid.New(), data); err != nil {
-		zap.L().Error("result of workflow.Execute is", zap.Error(err))
+		zap.L().Error(errorExecuteWorkflow, zap.Error(err))
 		return err
 	}
-	zap.L().Info("删除视频点赞dtm事务执行完成")
+	//zap.L().Info("删除视频点赞dtm事务执行完成")
 	return nil
 }
 
@@ -728,87 +710,4 @@ func GetFavoriteVideoList(req *request.DouyinFavoriteListRequest) ([]*response.V
 		}
 		return result, nil
 	}
-}
-
-func GetFavoriteCount(req *request.DouyinFavoriteCountRequest) ([]int64, []bool, error) {
-	if len(req.VideoId) == 0 {
-		return nil, nil, nil
-	}
-	//读视频对应的点赞数
-	favoriteCountList, err := redis.GetVideoFavoriteCount(req.VideoId)
-	if err != nil {
-		zap.L().Error(MGetVideoFavoriteCount, zap.Error(err))
-		return nil, nil, err
-	}
-	if req.UserId == 0 {
-		var userFavoriteBool []bool
-		for i := 0; i < len(favoriteCountList); i++ {
-			userFavoriteBool = append(userFavoriteBool, false)
-		}
-		return favoriteCountList, userFavoriteBool, nil
-	}
-	//mysql点赞表中查看用户是否对视频点赞
-	if req.UserId != 0 {
-		userFavoriteBool, err := mysql.GetUserFavoriteBool(req.UserId, req.VideoId)
-		if err != nil {
-			zap.L().Error(errorGetUserFavoriteBool, zap.Error(err))
-			return nil, nil, err
-		}
-		return favoriteCountList, userFavoriteBool, nil
-	}
-	return nil, nil, errors.New("调用的rpc参数输入错误")
-}
-
-func GetUserFavoriteVideoIdList(req *request.DouyinFavoriteIdListRequest) ([]int64, error) {
-	if req.UserId == 0 {
-		return nil, nil
-	}
-	f := make([]model.Favorite, 0)
-	if err := mysql.GetUserFavoriteID(req.UserId, &f); err != nil {
-		zap.L().Error(errorGetUserFavoriteID, zap.Error(err))
-		return nil, err
-	}
-	if len(f) == 0 {
-		return nil, nil
-	}
-	var idList []int64
-	for i := 0; i < len(f); i++ {
-		idList = append(idList, f[i].VideoID)
-	}
-	return idList, nil
-}
-
-func GetUserListFavoriteVideoIdList(req *request.DouyinFavoriteListIdListRequest) ([]*response1.FavoriteVideoIdList, error) {
-	if len(req.UserId) == 0 {
-		return nil, nil
-	}
-	var result []*response1.FavoriteVideoIdList
-	for i := 0; i < len(req.UserId); i++ {
-		f := make([]model.Favorite, 0)
-		if err := mysql.GetUserFavoriteID(req.UserId[i], &f); err != nil {
-			zap.L().Error(errorGetUserFavoriteID, zap.Error(err))
-			return nil, err
-		}
-		var idList []int64
-		for j := 0; j < len(f); j++ {
-			idList = append(idList, f[j].VideoID)
-		}
-		var r1 = response1.FavoriteVideoIdList{
-			VideoId: idList,
-		}
-		result = append(result, &r1)
-	}
-	return result, nil
-}
-
-func GetUserFavoritedCount(req *request.DouyinGetUserFavoritedCountRequest) ([]int64, []int64, error) {
-	if len(req.UserId) == 0 {
-		return nil, nil, nil
-	}
-	countFavorite, countFavorited, err := redis.GetUserFavoritedCount(req.UserId)
-	if err != nil {
-		zap.L().Error(errorGetUserFavoritedCount, zap.Error(err))
-		return nil, nil, err
-	}
-	return countFavorite, countFavorited, nil
 }

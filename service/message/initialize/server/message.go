@@ -3,6 +3,8 @@ package server
 import (
 	"douyin/proto/message/api"
 	"douyin/service/message/handler"
+	"douyin/service/message/initialize/config"
+	"fmt"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/health"
@@ -10,10 +12,15 @@ import (
 	"net"
 )
 
+const (
+	errorNetListen = "server tcp port start failed"
+	errorGrpcStart = "server grpc start failed"
+)
+
 func InitMessage() error {
-	listen, err := net.Listen("tcp", ":9083")
+	listen, err := net.Listen(config.Config.DouYinService.Protocol, fmt.Sprintf(":%d", config.Config.DouYinService.Port))
 	if err != nil {
-		zap.L().Error("server tcp port start failed", zap.Error(err))
+		zap.L().Error(errorNetListen, zap.Error(err))
 		return err
 	}
 	p := grpc.NewServer()
@@ -24,7 +31,7 @@ func InitMessage() error {
 	api.RegisterMessageServer(p, &handler.Message{})
 	err = p.Serve(listen)
 	if err != nil {
-		zap.L().Error("server grpc start failed", zap.Error(err))
+		zap.L().Error(errorGrpcStart, zap.Error(err))
 		return err
 	}
 	return nil

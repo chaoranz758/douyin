@@ -10,26 +10,11 @@ import (
 	"douyin/service/comment/dao/redis"
 	"douyin/service/comment/initialize/grpc_client"
 	"douyin/service/comment/model"
-	"douyin/service/message/util"
+	"douyin/service/comment/util"
 	"encoding/json"
 	"fmt"
 	"go.uber.org/zap"
 	time2 "time"
-)
-
-const (
-	errorConnectToGRPCServer       = "connect to grpc server failed"
-	errorCommentVideo              = "comment video failed"
-	errorPushCommentInfo           = "push comment information failed"
-	errorAddVideoCommentCount      = "push video comment count failed"
-	errorCreateComment             = "create comment failed"
-	errorGetUserInfo               = "get user information failed"
-	errorDeleteCommentInfo         = "delete comment information failed"
-	errorSubVideoCommentCount      = "sub video comment count failed"
-	errorGetCommentInfo            = "get comment information failed"
-	errorJsonMarshal               = "json marshal failed"
-	errorGetCommentCount           = "get comment count failed"
-	errorPushVCommentBasicInfoInit = "push v comment basic info init failed"
 )
 
 func CommentVideo(req *request.DouyinCommentActionRequest) (*response.Comment, error) {
@@ -284,7 +269,6 @@ func GetCommentVideoList(req *request.DouyinCommentListRequest) ([]*response.Com
 		return nil, err
 	}
 	if len(cs) == 0 {
-		zap.L().Info("该视频没有评论")
 		return nil, nil
 	}
 	var userId []int64
@@ -306,32 +290,4 @@ func GetCommentVideoList(req *request.DouyinCommentListRequest) ([]*response.Com
 		results = append(results, &result)
 	}
 	return results, nil
-}
-
-func GetCommentCount(req *request.DouyinCommentCountRequest) ([]int64, error) {
-	if len(req.VideoId) == 0 {
-		return nil, nil
-	}
-	countList, err := redis.GetCommentCount(req.VideoId)
-	if err != nil {
-		zap.L().Error(errorGetCommentCount, zap.Error(err))
-		return nil, err
-	}
-	return countList, nil
-}
-
-func PushVCommentBasicInfoInit(req *request.DouyinPushVCommentBasicInfoInitRequest) error {
-	for i := 0; i < len(req.VideoIdList); i++ {
-		cs := make([]model.Commit, 0)
-		if err := mysql.GetCommentInfo(&cs, req.VideoIdList[i]); err != nil {
-			zap.L().Error(errorGetCommentInfo, zap.Error(err))
-			return err
-		}
-		if len(cs) != 0 {
-			if err := redis.PushVCommentBasicInfoInit(req.UserId, req.VideoIdList[i], cs); err != nil {
-				zap.L().Error(errorPushVCommentBasicInfoInit, zap.Error(err))
-			}
-		}
-	}
-	return nil
 }

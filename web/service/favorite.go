@@ -23,7 +23,6 @@ func FavoriteVideo(favoriteVideoRequest request.FavoriteVideoRequest, loginUserI
 		LoginUserId: loginUserID,
 	})
 	if err != nil {
-		//fmt.Printf("%v\n", res.Code)
 		if res == nil {
 			zap.L().Error(errorConnectToGRPCServer, zap.Error(err))
 			return err

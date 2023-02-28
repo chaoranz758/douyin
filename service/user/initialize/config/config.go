@@ -31,6 +31,7 @@ type config1 struct {
 	ConsulRegister    `json:"consulRegister"`
 	ConsulCheckHealth `json:"consulCheckHealth"`
 	RequestGRPCServer `json:"requestGRPCServer"`
+	Jwt               `json:"jwt"`
 }
 
 type DouYinService struct {
@@ -105,6 +106,11 @@ type RequestGRPCServer struct {
 	VideoService struct {
 		Name string `json:"name"`
 	} `json:"videoService"`
+}
+
+type Jwt struct {
+	Secret string `json:"secret"`
+	Issuer string `json:"issuer"`
 }
 
 type Nacos struct {

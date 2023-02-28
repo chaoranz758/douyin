@@ -10,7 +10,8 @@ import (
 )
 
 const (
-	errorJsonUnmarshal = "json unmarshal failed"
+	maxInt64     = "9223372036854775807"
+	temporarySet = "temporary"
 )
 
 type ProducerMessage1 struct {
@@ -51,7 +52,7 @@ func GetMessage(userId, toUserId, latestTime int64, isFirst bool) ([]string, err
 	return rdb.ZRangeByScore(context.Background(), key, &redis.ZRangeBy{
 		Min: fmt.Sprintf("%v", latestTime),
 		//Max: fmt.Sprintf("%v", time.Now().UnixMilli()),
-		Max: "9223372036854775807",
+		Max: maxInt64,
 	}).Result()
 }
 
@@ -99,15 +100,15 @@ func PushActiveSet() ([]string, error) {
 		keyGet,
 		keySend,
 	}
-	_, err := rdb.SInterStore(context.Background(), "temporary", keys...).Result()
+	_, err := rdb.SInterStore(context.Background(), temporarySet, keys...).Result()
 	if err != nil {
 		return nil, err
 	}
-	result, err := rdb.SDiff(context.Background(), "temporary", keySet).Result()
+	result, err := rdb.SDiff(context.Background(), temporarySet, keySet).Result()
 	if err != nil {
 		return nil, err
 	}
-	err = rdb.Unlink(context.Background(), "temporary").Err()
+	err = rdb.Unlink(context.Background(), temporarySet).Err()
 	if err != nil {
 		return nil, err
 	}

@@ -1,8 +1,16 @@
 package producer
 
 import (
+	"douyin/service/follow/initialize/config"
 	"github.com/apache/rocketmq-client-go/v2"
 	"github.com/apache/rocketmq-client-go/v2/producer"
+)
+
+const (
+	producer1  = "followProducer1"
+	producer2  = "followProducer2"
+	producer3  = "followProducer3"
+	retryCount = 5
 )
 
 var (
@@ -13,9 +21,9 @@ var (
 
 func InitProducer1() error {
 	p, err := rocketmq.NewProducer(
-		producer.WithNameServer([]string{"192.168.182.137:9876"}),
-		producer.WithGroupName("followProducer1"),
-		producer.WithRetry(5),
+		producer.WithNameServer([]string{config.Config.Rocketmq.Address}),
+		producer.WithGroupName(producer1),
+		producer.WithRetry(retryCount),
 	)
 	if err != nil {
 		return err
@@ -30,9 +38,9 @@ func InitProducer1() error {
 
 func InitProducer2() error {
 	p, err := rocketmq.NewProducer(
-		producer.WithNameServer([]string{"192.168.182.137:9876"}),
-		producer.WithGroupName("followProducer2"),
-		producer.WithRetry(5),
+		producer.WithNameServer([]string{config.Config.Rocketmq.Address}),
+		producer.WithGroupName(producer2),
+		producer.WithRetry(retryCount),
 	)
 	if err != nil {
 		return err
@@ -47,9 +55,9 @@ func InitProducer2() error {
 
 func InitProducer3() error {
 	p, err := rocketmq.NewProducer(
-		producer.WithNameServer([]string{"192.168.182.137:9876"}),
-		producer.WithGroupName("followProducer3"),
-		producer.WithRetry(5),
+		producer.WithNameServer([]string{config.Config.Rocketmq.Address}),
+		producer.WithGroupName(producer3),
+		producer.WithRetry(retryCount),
 	)
 	if err != nil {
 		return err

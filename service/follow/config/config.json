@@ -64,6 +64,12 @@
       "name": "message_service"
     }
   },
+  "dtm": {
+    "address": "127.0.0.1:36790"
+  },
+  "rocketmq": {
+    "address": "192.168.182.137:9876"
+  },
   "nacos": {
     "ip": "192.168.182.137",
     "port": 8848,

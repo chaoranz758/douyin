@@ -3,25 +3,9 @@ package mysql
 import (
 	"douyin/proto/user/request"
 	"douyin/service/user/model"
-	"errors"
 	"go.uber.org/zap"
 	"gorm.io/gorm"
 	"strconv"
-)
-
-const (
-	errorCreateUser0           = "用户数据没有插入进user表但没有报错"
-	errorCreateUser            = "create user failed"
-	errorUserLogin0            = "在用户表中查不到对应的用户名"
-	errorUserLogin             = "user login failed"
-	errorUserInfoNotExist      = "user information not exist"
-	errorGetUserInfoFailed     = "get user information failed"
-	errorGetUserInfoListFailed = "get user information list failed"
-)
-
-var (
-	errorCreateUser0V = errors.New("用户数据没有插入进user表但没有报错")
-	errorUserLogin0V  = errors.New("在用户表中查不到对应的用户名")
 )
 
 func UserRegister(u *model.User) error {

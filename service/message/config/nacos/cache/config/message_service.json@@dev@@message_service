@@ -43,6 +43,9 @@
     "name": "message_service",
     "tags": "douyin:message_service"
   },
+  "rocketmq": {
+      "address": "192.168.182.137:9876"
+    },
   "consulCheckHealth": {
     "ip":"10.122.238.133",
     "port": 9083,

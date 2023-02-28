@@ -10,12 +10,6 @@ import (
 	"strconv"
 )
 
-const (
-	errorAddFavoriteCount  = "add favorite count failed"
-	errorSubFavoriteCount  = "sub favorite count failed"
-	MGetVideoFavoriteCount = "get video favorite count failed"
-)
-
 func AddFavoriteCount(userID, videoID, authorId int64) (int64, error) {
 	userID1 := strconv.FormatInt(userID, 10)
 	videoID1 := strconv.FormatInt(videoID, 10)
@@ -92,10 +86,6 @@ func GetVideoFavoriteCount(idList []int64) ([]int64, error) {
 		zap.L().Error(MGetVideoFavoriteCount, zap.Error(err))
 		return nil, err
 	}
-	//if result[0] == nil && len(result) == 1 {
-	//	data := make([]int64, len(idList), len(idList))
-	//	return data, nil
-	//}
 	var result1 []int64
 	for i := 0; i < len(result); i++ {
 		if result[i] == nil {
@@ -104,7 +94,7 @@ func GetVideoFavoriteCount(idList []int64) ([]int64, error) {
 			x, ok := result[i].(string)
 			x1, _ := strconv.ParseInt(x, 10, 64)
 			if !ok {
-				return nil, errors.New("类型转换失败")
+				return nil, errors.New(errorTypeTurnFailed)
 			}
 			result1 = append(result1, x1)
 		}
@@ -140,7 +130,7 @@ func GetUserFavoritedCount(userId []int64) ([]int64, []int64, error) {
 			r1, ok := cmd1.Val()[i].(string)
 			r11, _ := strconv.ParseInt(r1, 10, 64)
 			if !ok {
-				return nil, nil, errors.New("类型转换失败")
+				return nil, nil, errors.New(errorTypeTurnFailed)
 			}
 			result1 = append(result1, r11)
 		}
@@ -152,7 +142,7 @@ func GetUserFavoritedCount(userId []int64) ([]int64, []int64, error) {
 			r2, ok := cmd2.Val()[i].(string)
 			r21, _ := strconv.ParseInt(r2, 10, 64)
 			if !ok {
-				return nil, nil, errors.New("类型转换失败")
+				return nil, nil, errors.New(errorTypeTurnFailed)
 			}
 			result2 = append(result2, r21)
 		}

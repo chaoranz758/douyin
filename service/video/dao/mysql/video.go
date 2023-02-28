@@ -2,22 +2,7 @@ package mysql
 
 import (
 	"douyin/service/video/model"
-	"errors"
 	"go.uber.org/zap"
-)
-
-const (
-	errorCreateVideo0  = "视频数据没有插入进video表但没有报错"
-	errorCreateVideo   = "create video failed"
-	errorDeleteVideo0  = "视频数据没有从video表删除但没有报错"
-	errorDeleteVideo   = "delete video failed"
-	errorGetVideoInfo0 = "没有找到该用户发布的视频"
-	errorGetVideoInfo  = "get video information failed"
-)
-
-var (
-	errorCreateUser0V = errors.New("视频数据没有插入进video表但没有报错")
-	errorDeleteUser0V = errors.New("视频数据没有从video表删除但没有报错")
 )
 
 func CreateVideoInfo(v *model.Video) error {

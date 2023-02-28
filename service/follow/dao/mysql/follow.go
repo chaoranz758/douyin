@@ -3,7 +3,6 @@ package mysql
 import (
 	"douyin/proto/follow/request"
 	"douyin/service/follow/model"
-	"errors"
 	"go.uber.org/zap"
 	"gorm.io/gorm"
 )
@@ -11,18 +10,6 @@ import (
 const (
 	follow = iota
 	cancelFollow
-)
-
-const (
-	errorFollowRelation0 = "关注关系数据没有插入进follow表但没有报错"
-	errorFollowRelation  = "create follow relation failed"
-	errorDeleteFollow0   = "关注关系在follow表中没有被删除成功"
-	errorDeleteFollow    = "delete follow failed"
-)
-
-var (
-	errorFollowRelation0V = errors.New("关注关系数据没有插入进follow表但没有报错")
-	errorDeleteFollow0V   = errors.New("关注关系在follow表中没有被删除成功")
 )
 
 func CreateFollow(f *model.Follow) error {
@@ -44,7 +31,6 @@ func CreateFollow(f *model.Follow) error {
 		zap.L().Error(errorFollowRelation, zap.Error(resultGet.Error))
 		return resultGet.Error
 	}
-	zap.L().Info("用户取消关注后重新关注")
 	result := db.Model(&model.Follow{}).Where("follower_id = ? and follow_id = ? and status = ?", f.FollowerID, f.FollowID, cancelFollow).Update("status", follow)
 	if result.RowsAffected == 0 {
 		zap.L().Error(errorFollowRelation0, zap.Error(errorFollowRelation0V))

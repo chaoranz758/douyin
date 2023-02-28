@@ -24,12 +24,12 @@ func Init() (err error) {
 	//Logger: logger.Default.LogMode(logger.Info
 	Db, err = gorm.Open(mysql.Open(dsn), &gorm.Config{})
 	if err != nil {
-		zap.L().Error("connect DB failed", zap.Error(err))
+		zap.L().Error(errorConnectDB, zap.Error(err))
 		return err
 	}
 	sqlDB, err := Db.DB()
 	if err != nil {
-		zap.L().Error("open db.DB() failed", zap.Error(err))
+		zap.L().Error(errorOpenDB, zap.Error(err))
 		return err
 	}
 	//空闲连接池中连接的最大数量

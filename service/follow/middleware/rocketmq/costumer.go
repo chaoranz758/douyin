@@ -11,7 +11,6 @@ import (
 	"douyin/service/follow/initialize/rocketmq/producer"
 	"douyin/service/follow/model"
 	"encoding/json"
-	"fmt"
 	"github.com/apache/rocketmq-client-go/v2/consumer"
 	"github.com/apache/rocketmq-client-go/v2/primitive"
 	"go.uber.org/zap"
@@ -30,6 +29,19 @@ const (
 	errorPushVActiveBasicInfoInit      = "push v or active basic info init failed"
 	errorPushVCommentBasicInfoInit     = "push v comment basic info init failed"
 	errorGetUserFollowList             = "get user follow list failed"
+	errorJsonUnmarshal                 = "json unmarshal failed"
+	errorSendMessage                   = "生产者3消息发送失败"
+)
+
+const (
+	successCostumer1   = "消费者1消息执行完毕"
+	successCostumer2   = "消费者2消息执行完毕"
+	successCostumer3   = "消费者3消息执行完毕"
+	successSendMessage = "生产者3消息发送成功"
+)
+
+const (
+	topic3 = "followTopic3"
 )
 
 type ProducerMessage1 struct {
@@ -59,7 +71,7 @@ type ProducerMessage3 struct {
 func FollowCustomer1CallBack(ctx context.Context, msgs ...*primitive.MessageExt) (consumer.ConsumeResult, error) {
 	var producer1Message ProducerMessage1
 	if err := json.Unmarshal(msgs[0].Body, &producer1Message); err != nil {
-		zap.L().Error("json解析失败", zap.Error(err))
+		zap.L().Error(errorJsonUnmarshal, zap.Error(err))
 		return consumer.ConsumeRetryLater, err
 	}
 	res1, err := grpc_client.UserClient.PushVActiveFollowerUserinfo(context.Background(), &request1.DouyinVActiveFollowFollowerUserinfoRequest{
@@ -121,16 +133,15 @@ func FollowCustomer1CallBack(ctx context.Context, msgs ...*primitive.MessageExt)
 		}
 		data, _ := json.Marshal(producerMessage3)
 		msg := &primitive.Message{
-			Topic: "followTopic3",
+			Topic: topic3,
 			Body:  data,
 		}
-		sync, err := producer.Producer3.SendSync(context.Background(), msg)
+		_, err = producer.Producer3.SendSync(context.Background(), msg)
 		if err != nil {
-			zap.L().Error("生产者3消息发送失败", zap.Error(err))
+			zap.L().Error(errorSendMessage, zap.Error(err))
 			return consumer.ConsumeRetryLater, err
 		}
-		zap.L().Info("生产者3消息发送成功")
-		fmt.Printf("生产者3发送的消息：%v\n", sync.String())
+		zap.L().Info(successSendMessage)
 	}
 	if userFollowCount == 10 {
 		resAddUserFollowUserCountSet, err := grpc_client.UserClient.AddUserFollowUserCountSet(context.Background(), &request1.DouyinUserFollowCountSetRequest{
@@ -147,14 +158,14 @@ func FollowCustomer1CallBack(ctx context.Context, msgs ...*primitive.MessageExt)
 			}
 		}
 	}
-	zap.L().Info("消费者1执行成功")
+	zap.L().Info(successCostumer1)
 	return consumer.ConsumeSuccess, nil
 }
 
 func FollowCustomer2CallBack(ctx context.Context, msgs ...*primitive.MessageExt) (consumer.ConsumeResult, error) {
 	var producer2Message ProducerMessage2
 	if err := json.Unmarshal(msgs[0].Body, &producer2Message); err != nil {
-		zap.L().Error("json解析失败", zap.Error(err))
+		zap.L().Error(errorJsonUnmarshal, zap.Error(err))
 		return consumer.ConsumeRetryLater, err
 	}
 	res, err := grpc_client.UserClient.DeleteVActiveFollowerUserinfo(context.Background(), &request1.DouyinDeleteVActiveFollowFollowerUserinfoRequest{
@@ -177,7 +188,6 @@ func FollowCustomer2CallBack(ctx context.Context, msgs ...*primitive.MessageExt)
 		}
 	}
 	//关注关系从mysql关注表删除
-	//fmt.Printf("%v\n", producer2Message)
 	if err := mysql.DeleteFollow(producer2Message.LoginUserId, producer2Message.UserId); err != nil {
 		zap.L().Error(errorDeleteFollow, zap.Error(err))
 		return consumer.ConsumeRetryLater, err
@@ -187,14 +197,14 @@ func FollowCustomer2CallBack(ctx context.Context, msgs ...*primitive.MessageExt)
 		zap.L().Error(errorSubUserFollowFollowerCount, zap.Error(err))
 		return consumer.ConsumeRetryLater, err
 	}
-	zap.L().Info("消费者2执行成功")
+	zap.L().Info(successCostumer2)
 	return consumer.ConsumeSuccess, err
 }
 
 func FollowCustomer3CallBack(ctx context.Context, msgs ...*primitive.MessageExt) (consumer.ConsumeResult, error) {
 	var producer3Message ProducerMessage3
 	if err := json.Unmarshal(msgs[0].Body, &producer3Message); err != nil {
-		zap.L().Error("json解析失败", zap.Error(err))
+		zap.L().Error(errorJsonUnmarshal, zap.Error(err))
 		return consumer.ConsumeRetryLater, err
 	}
 	//！！！有一种可能性是用户由活跃用户升级为大V，这个时候不光要保存相关信息，还要将该用户之前在活跃用户那存的所有信息删掉
@@ -217,7 +227,7 @@ func FollowCustomer3CallBack(ctx context.Context, msgs ...*primitive.MessageExt)
 			}
 		}
 		if resPushVSet1.IsExist == 1 {
-			zap.L().Info("要写入大V的用户已经写入过了")
+			//zap.L().Info("要写入大V的用户已经写入过了")
 			return consumer.ConsumeSuccess, nil
 		}
 		isActive = resPushVSet1.IsActive
@@ -238,7 +248,6 @@ func FollowCustomer3CallBack(ctx context.Context, msgs ...*primitive.MessageExt)
 			}
 		}
 		if resPushVSet2.IsExist == 1 {
-			zap.L().Info("要写入大V的用户已经写入过了")
 			return consumer.ConsumeSuccess, nil
 		}
 		isActive = resPushVSet2.IsActive
@@ -260,7 +269,6 @@ func FollowCustomer3CallBack(ctx context.Context, msgs ...*primitive.MessageExt)
 	}
 	//可能没有发布视频 处理
 	if len(res.VideoIdList) == 0 {
-		zap.L().Info("大V没有发布视频，不需要处理评论")
 		return consumer.ConsumeSuccess, nil
 	}
 	//在评论服务中保存大V发布的各视频的评论信息
@@ -278,6 +286,6 @@ func FollowCustomer3CallBack(ctx context.Context, msgs ...*primitive.MessageExt)
 			return consumer.ConsumeRetryLater, err
 		}
 	}
-	zap.L().Info("消费者3执行成功")
+	zap.L().Info(successCostumer3)
 	return consumer.ConsumeSuccess, nil
 }

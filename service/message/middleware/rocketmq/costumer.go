@@ -14,6 +14,11 @@ import (
 const (
 	errorCreateMessage      = "create message failed"
 	errorAddUserSendMessage = "add user send message count failed"
+	errorJsonUnmarshal      = "json unmarshal failed"
+)
+
+const (
+	successCostumer1 = "消费者1消息执行完毕"
 )
 
 type ProducerMessage1 struct {
@@ -27,7 +32,7 @@ type ProducerMessage1 struct {
 func MessageCustomer1CallBack(ctx context.Context, msgs ...*primitive.MessageExt) (consumer.ConsumeResult, error) {
 	var producer1Message redis.ProducerMessage1
 	if err := json.Unmarshal(msgs[0].Body, &producer1Message); err != nil {
-		zap.L().Error("json解析失败", zap.Error(err))
+		zap.L().Error(errorJsonUnmarshal, zap.Error(err))
 		return consumer.ConsumeRetryLater, err
 	}
 	if err := redis.CreateMessage(producer1Message); err != nil {
@@ -50,6 +55,6 @@ func MessageCustomer1CallBack(ctx context.Context, msgs ...*primitive.MessageExt
 		zap.L().Error(errorAddUserSendMessage, zap.Error(err))
 		return consumer.ConsumeRetryLater, err
 	}
-	zap.L().Info("消费者1执行成功")
+	zap.L().Info(successCostumer1)
 	return consumer.ConsumeSuccess, nil
 }

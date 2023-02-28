@@ -30,6 +30,7 @@ type config1 struct {
 	ConsulServer      `json:"consulServer"`
 	ConsulRegister    `json:"consulRegister"`
 	ConsulCheckHealth `json:"consulCheckHealth"`
+	Rocketmq          `json:"rocketmq"`
 }
 
 type DouYinService struct {
@@ -89,6 +90,10 @@ type ConsulCheckHealth struct {
 	Timeout                        string `json:"timeout" json:"timeout"`
 	Interval                       string `json:"interval" json:"interval"`
 	DeregisterCriticalServiceAfter string `json:"deregisterCriticalServiceAfter" json:"deregisterCriticalServiceAfter"`
+}
+
+type Rocketmq struct {
+	Address string `json:"address"`
 }
 
 type Nacos struct {

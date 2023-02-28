@@ -13,7 +13,6 @@ import (
 	"douyin/service/follow/initialize/rocketmq/producer"
 	"douyin/service/follow/model"
 	"encoding/json"
-	"fmt"
 	"github.com/apache/rocketmq-client-go/v2/primitive"
 	"github.com/dtm-labs/dtmcli"
 	"github.com/dtm-labs/dtmgrpc/workflow"
@@ -24,24 +23,13 @@ import (
 )
 
 const (
-	errorConnectToGRPCServer            = "connect to grpc server failed"
-	errorExeVActiveSet                  = "exe if request is V or active from redis set failed"
-	errorPushVActiveFollowerUserinfo    = "push v active follower user information failed"
-	errorAddUserFollowFollowerCount     = "add user follow follower count failed"
-	errorCreateFollow                   = "create follow failed"
-	errorDeleteVActiveFollowerUserinfo  = "delete v active follower user information failed"
-	errorSubUserFollowFollowerCount     = "sub user follow follower count failed"
-	errorDeleteFollow                   = "delete follow failed"
-	errorGetVActiveFollowerUserinfo     = "get v active follower user information failed"
-	errorGetUserFollowList              = "get user follow list failed"
-	errorGetUserInfoList                = "get user information list failed"
-	errorJudgeUserIsFollow              = "judge user is follow failed"
-	errorJudgeUserIsFollowList          = "judge user is follow list failed"
-	errorGetUserFollowFollowerCount     = "get user follow follower count failed"
-	errorGetUserFollowFollowerCountList = "get user follow follower count list failed"
-	errorAddUserFollowUserCountSet      = "add user follow user count set failed"
-	errorAddUserFollowerUserCountSet    = "add user follower user count set failed"
-	errorGetUserFriendMessage           = "get user friend message failed"
+	wfName1 = "workflow-followUser"
+)
+
+const (
+	topic1 = "followTopic1"
+	topic2 = "followTopic2"
+	topic3 = "followTopic3"
 )
 
 type ProducerMessage1 struct {
@@ -98,7 +86,7 @@ func FollowUserDtm(req *request.DouyinRelationActionRequest) error {
 				return err
 			}
 		}
-		wfName := "workflow-followUser" + shortuuid.New()
+		wfName := wfName1 + shortuuid.New()
 		errWF := workflow.Register(wfName, func(wf *workflow.Workflow, data []byte) error {
 			//大V或活跃用户分支事务
 			wf.NewBranch().OnRollback(func(bb *dtmcli.BranchBarrier) error {
@@ -123,7 +111,7 @@ func FollowUserDtm(req *request.DouyinRelationActionRequest) error {
 						}
 					}
 				}
-				zap.L().Info("大V或活跃用户分支事务回滚完成")
+				//zap.L().Info("大V或活跃用户分支事务回滚完成")
 				return nil
 			})
 			if res.IsInfluencer == true || res.IsActiver == true {
@@ -147,7 +135,7 @@ func FollowUserDtm(req *request.DouyinRelationActionRequest) error {
 					}
 				}
 			}
-			zap.L().Info("大V或活跃用户分支事务执行完成")
+			//zap.L().Info("大V或活跃用户分支事务执行完成")
 			//用户粉丝集合分支事务
 			wf.NewBranch().OnRollback(func(bb *dtmcli.BranchBarrier) error {
 				resAddUserFollowUserCountSet, err := grpc_client.UserClientDtm.AddUserFollowUserCountSetRevert(wf.Context, &request1.DouyinUserFollowCountSetRequest{
@@ -163,7 +151,7 @@ func FollowUserDtm(req *request.DouyinRelationActionRequest) error {
 						return err
 					}
 				}
-				zap.L().Info("用户粉丝集合分支事务回滚完成")
+				//zap.L().Info("用户粉丝集合分支事务回滚完成")
 				return nil
 			})
 			userFollowCount, userFollowerCount, err := redis.GetUserFollowFollowerCountInner(req.LoginUserId, req.ToUserId)
@@ -188,7 +176,7 @@ func FollowUserDtm(req *request.DouyinRelationActionRequest) error {
 					}
 				}
 			}
-			zap.L().Info("用户粉丝集合分支事务执行完成")
+			//zap.L().Info("用户粉丝集合分支事务执行完成")
 			//用户关注者集合分支事务
 			wf.NewBranch().OnRollback(func(bb *dtmcli.BranchBarrier) error {
 				resAddUserFollowerUserCountSet, err := grpc_client.UserClientDtm.AddUserFollowerUserCountSetRevert(wf.Context, &request1.DouyinUserFollowerCountSetRequest{
@@ -204,7 +192,7 @@ func FollowUserDtm(req *request.DouyinRelationActionRequest) error {
 						return err
 					}
 				}
-				zap.L().Info("用户关注者集合分支事务回滚完成")
+				//zap.L().Info("用户关注者集合分支事务回滚完成")
 				return nil
 			})
 			if res1.IsActiver == false && res1.IsInfluencer == false {
@@ -225,7 +213,7 @@ func FollowUserDtm(req *request.DouyinRelationActionRequest) error {
 					}
 				}
 			}
-			zap.L().Info("用户关注者集合分支事务执行完成")
+			//zap.L().Info("用户关注者集合分支事务执行完成")
 			_, err = wf.NewBranch().Do(func(bb *dtmcli.BranchBarrier) ([]byte, error) {
 				if res1.IsInfluencer == true || res1.IsActiver == true {
 					//走消息队列
@@ -239,16 +227,15 @@ func FollowUserDtm(req *request.DouyinRelationActionRequest) error {
 					}
 					data, _ := json.Marshal(producerMessage1)
 					msg := &primitive.Message{
-						Topic: "followTopic1",
+						Topic: topic1,
 						Body:  data,
 					}
-					sync, err := producer.Producer1.SendSync(context.Background(), msg)
+					_, err = producer.Producer1.SendSync(context.Background(), msg)
 					if err != nil {
-						zap.L().Error("生产者1消息发送失败", zap.Error(err))
+						zap.L().Error(errorSendMessage1, zap.Error(err))
 						return nil, status.Error(codes.Aborted, err.Error())
 					}
-					zap.L().Info("生产者1消息发送成功")
-					fmt.Printf("生产者1发送的消息：%v\n", sync.String())
+					zap.L().Info(successSendMessage1)
 					return nil, nil
 				}
 				//关注关系写入mysql关注表
@@ -297,32 +284,31 @@ func FollowUserDtm(req *request.DouyinRelationActionRequest) error {
 					}
 					data, _ := json.Marshal(producerMessage3)
 					msg := &primitive.Message{
-						Topic: "followTopic3",
+						Topic: topic3,
 						Body:  data,
 					}
-					sync, err := producer.Producer3.SendSync(context.Background(), msg)
+					_, err = producer.Producer3.SendSync(context.Background(), msg)
 					if err != nil {
-						zap.L().Error("生产者3消息发送失败", zap.Error(err))
+						zap.L().Error(errorSendMessage3, zap.Error(err))
 						return nil, status.Error(codes.Aborted, err.Error())
 					}
-					zap.L().Info("生产者3消息发送成功")
-					fmt.Printf("生产者3发送的消息：%v\n", sync.String())
+					zap.L().Info(successSendMessage3)
 					return nil, nil
 				}
-				zap.L().Info("本地事务执行完成")
+				//zap.L().Info("本地事务执行完成")
 				return nil, nil
 			})
 			return err
 		})
 		if errWF != nil {
-			zap.L().Error("workflow register failed", zap.Error(err))
+			zap.L().Error(errorRegisterWorkflow, zap.Error(err))
 			return err
 		}
 		if err = workflow.Execute(wfName, shortuuid.New(), nil); err != nil {
-			zap.L().Error("result of workflow.Execute is", zap.Error(err))
+			zap.L().Error(errorExecuteWorkflow, zap.Error(err))
 			return err
 		}
-		zap.L().Info("关注用户dtm事务执行完成")
+		//zap.L().Info("关注用户dtm事务执行完成")
 		return nil
 	}
 	//判断当前登录用户是否为大V或活跃用户
@@ -353,7 +339,7 @@ func FollowUserDtm(req *request.DouyinRelationActionRequest) error {
 			return err
 		}
 	}
-	wfName := "workflow-deleteFollowUser" + shortuuid.New()
+	wfName := wfName1 + shortuuid.New()
 	errWorkflow := workflow.Register(wfName, func(wf *workflow.Workflow, data []byte) error {
 		//删除大V活跃用户粉丝信息分支事务
 		wf.NewBranch().OnRollback(func(bb *dtmcli.BranchBarrier) error {
@@ -379,7 +365,7 @@ func FollowUserDtm(req *request.DouyinRelationActionRequest) error {
 					}
 				}
 			}
-			zap.L().Info("删除大V活跃用户粉丝信息分支事务回滚")
+			//zap.L().Info("删除大V活跃用户粉丝信息分支事务回滚")
 			return nil
 		})
 		if res.IsInfluencer == true || res.IsActiver == true {
@@ -404,7 +390,7 @@ func FollowUserDtm(req *request.DouyinRelationActionRequest) error {
 				}
 			}
 		}
-		zap.L().Info("删除大V活跃用户粉丝信息分支事务执行成功")
+		//zap.L().Info("删除大V活跃用户粉丝信息分支事务执行成功")
 		//本地事务
 		_, err = wf.NewBranch().Do(func(bb *dtmcli.BranchBarrier) ([]byte, error) {
 			if res3.IsInfluencer == true || res3.IsActiver == true {
@@ -419,16 +405,15 @@ func FollowUserDtm(req *request.DouyinRelationActionRequest) error {
 				}
 				data, _ := json.Marshal(producerMessage2)
 				msg := &primitive.Message{
-					Topic: "followTopic2",
+					Topic: topic2,
 					Body:  data,
 				}
-				sync, err := producer.Producer2.SendSync(context.Background(), msg)
+				_, err = producer.Producer2.SendSync(context.Background(), msg)
 				if err != nil {
-					zap.L().Error("生产者2消息发送失败", zap.Error(err))
+					zap.L().Error(errorSendMessage2, zap.Error(err))
 					return nil, status.Error(codes.Aborted, err.Error())
 				}
-				zap.L().Info("生产者2消息发送成功")
-				fmt.Printf("生产者2发送的消息：%v\n", sync.String())
+				zap.L().Info(successSendMessage2)
 				return nil, nil
 			}
 			//关注关系从mysql关注表删除
@@ -450,20 +435,20 @@ func FollowUserDtm(req *request.DouyinRelationActionRequest) error {
 				}
 				return nil, status.Error(codes.Aborted, err.Error())
 			}
-			zap.L().Info("本地事务执行成功")
+			//zap.L().Info("本地事务执行成功")
 			return nil, nil
 		})
 		return err
 	})
 	if errWorkflow != nil {
-		zap.L().Error("workflow register failed", zap.Error(errWorkflow))
+		zap.L().Error(errorRegisterWorkflow, zap.Error(errWorkflow))
 		return err
 	}
 	if err = workflow.Execute(wfName, shortuuid.New(), nil); err != nil {
-		zap.L().Error("result of workflow.Execute is", zap.Error(err))
+		zap.L().Error(errorExecuteWorkflow, zap.Error(err))
 		return err
 	}
-	zap.L().Info("删除关注用户dtm事务执行完成")
+	//zap.L().Info("删除关注用户dtm事务执行完成")
 	return nil
 }
 
@@ -751,86 +736,4 @@ func GetFriendList(req *request.DouyinRelationFriendListRequest) ([]*response1.F
 		return results, nil
 	}
 	return nil, nil
-}
-
-func GetFollowInfo(req *request.DouyinGetFollowRequest) (bool, error) {
-	b, err := mysql.JudgeUserIsFollow(req)
-	if err != nil {
-		zap.L().Error(errorJudgeUserIsFollow, zap.Error(err))
-		return false, err
-	}
-	return b, nil
-}
-
-func GetFollowInfoList(req *request.DouyinGetFollowListRequest) ([]bool, error) {
-	if len(req.ToUserId) == 0 {
-		return nil, nil
-	}
-	boolList, err := mysql.JudgeUserIsFollowList(req)
-	if err != nil {
-		zap.L().Error(errorJudgeUserIsFollowList, zap.Error(err))
-		return nil, err
-	}
-	return boolList, nil
-}
-
-func GetFollowFollower(req *request.DouyinFollowFollowerCountRequest) (int64, int64, error) {
-	if req.UserId == 0 {
-		return 0, 0, nil
-	}
-	count1, count2, err := redis.GetUserFollowFollowerCount(req.UserId)
-	if err != nil {
-		zap.L().Error(errorGetUserFollowFollowerCount, zap.Error(err))
-		return 0, 0, err
-	}
-	return count1, count2, nil
-}
-
-func GetFollowFollowerList(req *request.DouyinFollowFollowerListCountRequest) ([]int64, []int64, error) {
-	if len(req.UserId) == 0 {
-		return nil, nil, nil
-	}
-	count1List, count2List, err := redis.GetUserFollowFollowerCountList(req.UserId)
-	if err != nil {
-		zap.L().Error(errorGetUserFollowFollowerCountList, zap.Error(err))
-		return nil, nil, err
-	}
-	return count1List, count2List, nil
-}
-
-func GetFollowFollowerIdList(req *request.DouyinGetFollowFollowerIdListRequest) ([]*response1.FollowList, []*response1.FollowerList, error) {
-	if len(req.UserId) == 0 {
-		return nil, nil, nil
-	}
-	var result1 []*response1.FollowList
-	var result2 []*response1.FollowerList
-	for i := 0; i < len(req.UserId); i++ {
-		fs1 := make([]model.Follow, 0)
-		if err := mysql.GetUserFollowList(&fs1, req.UserId[i]); err != nil {
-			zap.L().Error(errorGetUserFollowList, zap.Error(err))
-			return nil, nil, err
-		}
-		var idList1 []int64
-		for i := 0; i < len(fs1); i++ {
-			idList1 = append(idList1, fs1[i].FollowID)
-		}
-		var r1 = response1.FollowList{
-			UserId: idList1,
-		}
-		fs2 := make([]model.Follow, 0)
-		if err := mysql.GetUserFollowerList(&fs2, req.UserId[i]); err != nil {
-			zap.L().Error(errorGetUserFollowList, zap.Error(err))
-			return nil, nil, err
-		}
-		var idList2 []int64
-		for i := 0; i < len(fs2); i++ {
-			idList2 = append(idList2, fs2[i].FollowerID)
-		}
-		var r2 = response1.FollowerList{
-			UserId: idList2,
-		}
-		result1 = append(result1, &r1)
-		result2 = append(result2, &r2)
-	}
-	return result1, result2, nil
 }
