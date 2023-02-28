@@ -23,7 +23,8 @@ import (
 )
 
 const (
-	wfName1 = "workflow-favoriteVideo"
+	wfName1            = "workflow-favoriteVideo"
+	favoriteVideoCount = 4
 )
 
 const (
@@ -201,7 +202,7 @@ func FavoriteVideoDtm(req *request.DouyinFavoriteActionRequest) error {
 					zap.L().Error(errorGetFavoriteCount, zap.Error(err))
 					return err
 				}
-				if count == 4 {
+				if count == favoriteVideoCount {
 					res5, err := grpc_client.UserClientDtm.AddUserFavoriteVideoCountSet(wf.Context, &request1.DouyinUserVideoCountSetRequest{
 						UserId: req1.LoginUserId,
 					})

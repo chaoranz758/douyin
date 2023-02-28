@@ -25,7 +25,10 @@ import (
 )
 
 const (
-	wfName1 = "workflow-publish video"
+	wfName1          = "workflow-publish video"
+	soloCount        = 30
+	listLength       = 300
+	userPublishVideo = 4
 )
 
 func PublishVideoDtm(req *request.DouyinPublishActionRequest) error {
@@ -58,7 +61,7 @@ func PublishVideoDtm(req *request.DouyinPublishActionRequest) error {
 			zap.L().Error(errorGetUserVideoCount, zap.Error(err))
 			return err
 		}
-		if count == 4 {
+		if count == userPublishVideo {
 			res1, err := grpc_client.UserClientDtm.AddUserVideoCountSet(wf.Context, &request)
 			if err != nil {
 				if res1 == nil {
@@ -394,9 +397,9 @@ func GetVideoList(req *request.DouyinFeedRequest) ([]*response2.Video, int64, er
 			}
 		}
 		count := len(data)
-		if count < 31 && countVideo > 300 {
-			videos := make([]model.Video, 0, 30)
-			if err := mysql.GetVideoListByCreateTime(&videos, lastTime1, 31-count); err != nil {
+		if count < soloCount+1 && countVideo > listLength {
+			videos := make([]model.Video, 0, soloCount)
+			if err := mysql.GetVideoListByCreateTime(&videos, lastTime1, soloCount+1-count); err != nil {
 				zap.L().Error(errorGetVideoListByCreateTime, zap.Error(err))
 				return nil, 0, err
 			}

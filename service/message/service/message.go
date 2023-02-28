@@ -168,7 +168,6 @@ func GetMessage(req *request.DouyinMessageChatRequest) ([]*response.Message, err
 				zap.L().Error(errorGetMessage, zap.Error(err))
 				return nil, err
 			}
-			//fmt.Printf("用户7消息1%v", result1)
 			if len(result1) != 0 {
 				if isFirst == true {
 					for i := 0; i < len(result1); i++ {
@@ -234,7 +233,6 @@ func GetMessage(req *request.DouyinMessageChatRequest) ([]*response.Message, err
 			zap.L().Error(errorGetMessage, zap.Error(err))
 			return nil, err
 		}
-		//fmt.Printf("用户7消息2%v", result1)
 		if len(result1) != 0 {
 			if isFirst == true {
 				for i := 0; i < len(result1); i++ {

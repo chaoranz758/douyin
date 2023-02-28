@@ -44,6 +44,11 @@ const (
 	topic3 = "followTopic3"
 )
 
+const (
+	followCount    = 10
+	vfollowerCount = 20
+)
+
 type ProducerMessage1 struct {
 	LoginUserId   int64 `json:"loginUserId"`
 	UserId        int64 `json:"userId"`
@@ -106,7 +111,7 @@ func FollowCustomer1CallBack(ctx context.Context, msgs ...*primitive.MessageExt)
 		zap.L().Error(errorAddUserFollowFollowerCount, zap.Error(err))
 		return consumer.ConsumeRetryLater, err
 	}
-	if userFollowerCount == 20 && producer1Message.IsActive == true {
+	if userFollowerCount == vfollowerCount && producer1Message.IsActive == true {
 		fs1 := make([]model.Follow, 0)
 		fs2 := make([]model.Follow, 0)
 		if err = mysql.GetUserFollowList(&fs1, producer1Message.UserId); err != nil {
@@ -143,7 +148,7 @@ func FollowCustomer1CallBack(ctx context.Context, msgs ...*primitive.MessageExt)
 		}
 		zap.L().Info(successSendMessage)
 	}
-	if userFollowCount == 10 {
+	if userFollowCount == followCount {
 		resAddUserFollowUserCountSet, err := grpc_client.UserClient.AddUserFollowUserCountSet(context.Background(), &request1.DouyinUserFollowCountSetRequest{
 			UserId: producer1Message.LoginUserId,
 		})

@@ -41,9 +41,10 @@ const (
 )
 
 const (
-	wfName1 = "workflow-favoriteVideoCustomer1"
-	wfName2 = "workflow-favoriteVideoCustomer2"
-	wfName3 = "workflow-favoriteVideoCustomer3"
+	wfName1            = "workflow-favoriteVideoCustomer1"
+	wfName2            = "workflow-favoriteVideoCustomer2"
+	wfName3            = "workflow-favoriteVideoCustomer3"
+	favoriteVideoCount = 4
 )
 
 type Producer1Message struct {
@@ -200,7 +201,7 @@ func FavoriteCustomer2CallBack(ctx context.Context, msgs ...*primitive.MessageEx
 			zap.L().Error(errorGetFavoriteCount, zap.Error(err))
 			return status.Error(codes.Aborted, err.Error())
 		}
-		if count == 4 {
+		if count == favoriteVideoCount {
 			res5, err := grpc_client.UserClientDtm.AddUserFavoriteVideoCountSet(wf.Context, &request1.DouyinUserVideoCountSetRequest{
 				UserId: producer2Message.LoginUserID,
 			})

@@ -10,8 +10,10 @@ import (
 )
 
 const (
-	maxInt64     = "9223372036854775807"
-	temporarySet = "temporary"
+	maxInt64         = "9223372036854775807"
+	temporarySet     = "temporary"
+	getMessageCount  = 50
+	sendMessageCount = 10
 )
 
 type ProducerMessage1 struct {
@@ -51,7 +53,6 @@ func GetMessage(userId, toUserId, latestTime int64, isFirst bool) ([]string, err
 	}
 	return rdb.ZRangeByScore(context.Background(), key, &redis.ZRangeBy{
 		Min: fmt.Sprintf("%v", latestTime),
-		//Max: fmt.Sprintf("%v", time.Now().UnixMilli()),
 		Max: maxInt64,
 	}).Result()
 }
@@ -65,7 +66,7 @@ func AddUserGetMessage(userId int64) error {
 	pipe.Expire(context.Background(), key, time.Hour*72)
 	_, err := pipe.Exec(context.Background())
 	count := intCmd.Val()
-	if count == 20 {
+	if count == getMessageCount {
 		keyGet := getKey(KeyGetCountSet)
 		if err = rdb.SAdd(context.Background(), keyGet, userId1).Err(); err != nil {
 			return err
@@ -83,7 +84,7 @@ func AddUserSendMessage(userId int64) error {
 	pipe.Expire(context.Background(), key, time.Hour*72)
 	_, err := pipe.Exec(context.Background())
 	count := intCmd.Val()
-	if count == 10 {
+	if count == sendMessageCount {
 		keySend := getKey(KeySendCountSet)
 		if err = rdb.SAdd(context.Background(), keySend, userId1).Err(); err != nil {
 			return err

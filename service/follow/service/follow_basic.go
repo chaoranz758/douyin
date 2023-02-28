@@ -23,7 +23,10 @@ import (
 )
 
 const (
-	wfName1 = "workflow-followUser"
+	wfName1        = "workflow-followUser"
+	followCount    = 9
+	followerCount  = 9
+	vfollowerCount = 20
 )
 
 const (
@@ -160,7 +163,7 @@ func FollowUserDtm(req *request.DouyinRelationActionRequest) error {
 				return status.Error(codes.Aborted, err.Error())
 			}
 			if res.IsActiver == false && res.IsInfluencer == false {
-				if userFollowCount == 9 {
+				if userFollowCount == followCount {
 					resAddUserFollowUserCountSet, err := grpc_client.UserClientDtm.AddUserFollowUserCountSet(wf.Context, &request1.DouyinUserFollowCountSetRequest{
 						UserId: req.LoginUserId,
 					})
@@ -197,7 +200,7 @@ func FollowUserDtm(req *request.DouyinRelationActionRequest) error {
 			})
 			if res1.IsActiver == false && res1.IsInfluencer == false {
 				println(userFollowerCount)
-				if userFollowerCount == 9 {
+				if userFollowerCount == followerCount {
 					resAddUserFollowerUserCountSet, err := grpc_client.UserClientDtm.AddUserFollowerUserCountSet(wf.Context, &request1.DouyinUserFollowerCountSetRequest{
 						UserId: req.ToUserId,
 					})
@@ -257,7 +260,7 @@ func FollowUserDtm(req *request.DouyinRelationActionRequest) error {
 					}
 					return nil, status.Error(codes.Aborted, err.Error())
 				}
-				if userFollowerCount == 20 {
+				if userFollowerCount == vfollowerCount {
 					fs1 := make([]model.Follow, 0)
 					fs2 := make([]model.Follow, 0)
 					if err = mysql.GetUserFollowList(&fs1, req.ToUserId); err != nil {

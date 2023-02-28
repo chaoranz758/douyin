@@ -13,6 +13,11 @@ import (
 	"time"
 )
 
+const (
+	listLength = 300
+	soloCount  = 30
+)
+
 func JudgeFeedIsFirst(t string) (int64, error) {
 	key := getKey(KeyVideoInfoZSet)
 	return rdb.ZCount(context.Background(), key, t, t).Result()
@@ -23,6 +28,7 @@ func PublishVideoInfoZSet(v *model.Video, times int64) error {
 	data, err := json.Marshal(v)
 	if err != nil {
 		zap.L().Error(errorJsonMarshal, zap.Error(err))
+		return err
 	}
 	_, err = rdb.ZAdd(context.Background(), key, &redis.Z{
 		Score:  float64(times),
@@ -39,8 +45,8 @@ func PublishVideoInfoZSet(v *model.Video, times int64) error {
 		return err
 	}
 	//若队列长度大于300,则裁剪
-	if length > 300 {
-		rdb.ZRemRangeByRank(context.Background(), key, 0, length-301)
+	if length > listLength {
+		rdb.ZRemRangeByRank(context.Background(), key, 0, length-(listLength+1))
 	}
 	return nil
 }
@@ -50,7 +56,7 @@ func GetVideoInfoZSetInitial() ([]string, error) {
 	time1 := strconv.FormatInt(time.Now().UnixMilli(), 10)
 	results, err := rdb.ZRevRangeByScore(context.Background(), key, &redis.ZRangeBy{
 		Max:   time1,
-		Count: 30,
+		Count: soloCount,
 	}).Result()
 	if err != nil {
 		zap.L().Error(errorZRevRangeByScore, zap.Error(err))
@@ -71,7 +77,7 @@ func GetVideoInfoZSet(time string) (int64, []string, error) {
 	}
 	results, err := rdb.ZRevRangeByScore(context.Background(), key, &redis.ZRangeBy{
 		Max:   time,
-		Count: 31,
+		Count: soloCount + 1,
 	}).Result()
 
 	if err != nil {
